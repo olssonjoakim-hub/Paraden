@@ -460,11 +460,12 @@ body::after {
 .gallery__nav button:last-child { text-align: right; }
 
 /* Bilder i galleriet: svartvita tills man hovrar, klick öppnar dem större */
-.room img, .portraits img { filter: grayscale(1) contrast(1.04); transition: filter .9s ease; }
+.room img, .portraits img { filter: grayscale(1) contrast(1.04); transition: filter .9s ease, transform 1.2s var(--ease); }
+.room figure:hover img { transform: scale(1.04); }
+.portraits figure:hover img { transform: scale(1.05); }
 .room figure:hover img, .portraits figure:hover img, .room figure:focus-visible img, .portraits figure:focus-visible img { filter: none; }
-.room figure, .portraits figure { cursor: zoom-in; }
 .room figure:focus-visible, .portraits figure:focus-visible { outline: 2px solid var(--chalk); outline-offset: 3px; }
-.zoom { position: fixed; inset: 0; z-index: 5; cursor: zoom-out; background: rgba(12, 12, 12, 0); transition: background .5s ease; outline: none; }
+.zoom { position: fixed; inset: 0; z-index: 5; background: rgba(12, 12, 12, 0); transition: background .5s ease; outline: none; }
 .zoom.on { background: rgba(12, 12, 12, .4); }
 .zoom[hidden] { display: none; }
 .zoom img {
