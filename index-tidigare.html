@@ -117,7 +117,7 @@ body::after {
   text-transform: uppercase;
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity 1s ease 2.5s, transform 1s ease 2.5s;
+  transition: opacity 1s ease 3.6s, transform 1s ease 3.6s;
 }
 .go-kicker .hero__kicker { opacity: .85; transform: none; }
 .hero__cue {
@@ -694,7 +694,7 @@ body::after {
     [...'PARADEN'].forEach((ch, i) => {
       const [adv, paths] = G[ch];
       const strokes = paths.map(([d, zone], j) => {
-        const dl = .15 + i * .12 + j * .22 + rnd() * .55, t = .75 + rnd() * .6;
+        const dl = .2 + i * .18 + j * .32 + rnd() * .8, t = 1.1 + rnd() * .9;
         end = Math.max(end, dl + t);
         // Klippningen sitter på grupper med en osynlig ruta, så att raka streck inte får ytan noll
         // (då ritar Safari dem som hårfina linjer).
@@ -1019,6 +1019,30 @@ body::after {
     my = e.clientY / innerHeight - .5;
     request();
   }, { passive: true });
+
+  // Telefon: lutningen (gyroskopet) styr samma parallax som musen gör på datorn.
+  // iPhone kräver att besökaren godkänner rörelsesensorn; frågan visas vid första tryckningen.
+  let tiltBase = null;
+  const onTilt = e => {
+    if (e.gamma == null || e.beta == null) return;
+    if (tiltBase === null) tiltBase = e.beta;
+    mx = clamp(e.gamma / 45, -.5, .5);
+    my = clamp((e.beta - tiltBase) / 45, -.5, .5);
+    request();
+  };
+  const startTilt = () => addEventListener('deviceorientation', onTilt);
+  if ('DeviceOrientationEvent' in window) {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      const ask = () => {
+        DeviceOrientationEvent.requestPermission().then(r => {
+          removeEventListener('touchend', ask); removeEventListener('click', ask);
+          if (r === 'granted') startTilt();
+        }).catch(() => {});
+      };
+      addEventListener('touchend', ask, { passive: true });
+      addEventListener('click', ask);
+    } else startTilt();
+  }
 
   function progress(el, vh) {
     const r = el.getBoundingClientRect();
