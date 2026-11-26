@@ -75,23 +75,23 @@ body {
 /* Lager-huvudbild: väggen och föremålen rör sig i olika takt */
 .hero:not(.hero--lager) .hero__wall, .hero:not(.hero--lager) .hero__objects { display: none; }
 .hero--lager .hero__old { display: none; }
-.hero--lager { background: #232222; }
-.hero__wall img { object-position: 50% 30%; }
+.hero--lager { background: #34302f; }
+.hero__wall img { object-position: 50% 100%; }
+/* Föremålen: alltid minst skärmens bredd, toppen strax under rubriken, nederdelen når skärmens botten.
+   Föremålen börjar 19 % ner i bilden och bilden är 3:2. */
 .hero__objects {
+  --w: max(100vw, 137svh);
   position: absolute;
   left: 50%;
-  bottom: -2%;
+  top: calc(26svh - var(--w) * .127);
   z-index: -2;
-  height: 80%;
-  aspect-ratio: 1333 / 1024;
+  width: var(--w);
+  aspect-ratio: 2000 / 1333;
   translate: -50% 0;
   pointer-events: none;
   will-change: transform;
 }
 .hero__objects img { width: 100%; height: 100%; max-width: none; display: block; }
-@media (max-aspect-ratio: 1/1) { .hero__objects { height: 62%; } }
-/* Liggande skärmar: föremålen fyller hela bredden, toppen strax under rubriken och nederdelen beskärs */
-@media (min-aspect-ratio: 1/1) { .hero__objects { bottom: auto; top: clamp(150px, 26%, 340px); height: auto; width: 100%; } }
 .hero__shade {
   position: absolute; inset: 0; z-index: -1;
   background:
@@ -498,10 +498,10 @@ body {
       alt="Installationen Paraden: bärbara skulpturer av grå filt i ett rum, med en film från paraden projicerad på väggen.">
   </div>
   <div class="hero__media hero__wall">
-    <img src="bilder/hero-vagg.jpg" srcset="bilder/hero-vagg-800.jpg 800w, bilder/hero-vagg.jpg 1333w" sizes="100vw" alt="">
+    <img src="bilder/hero-vagg.jpg" alt="">
   </div>
   <div class="hero__objects">
-    <img src="bilder/hero-objekt.webp" srcset="bilder/hero-objekt-800.webp 800w, bilder/hero-objekt.webp 1333w" sizes="(max-width: 860px) 200vw, 110vh"
+    <img src="bilder/hero-objekt.webp"
       alt="Skulpturer av svart filt i en hög: remsor, en fyrkantig huva och veckade tyger.">
   </div>
   <div class="hero__shade"></div>
