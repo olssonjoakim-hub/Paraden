@@ -18,5 +18,18 @@ Platserna ligger i listan `PLACES` i skriptet längst ner i `index.html`. För v
 
 ## Publicering
 
-Sidan är just nu en förhandsversion som Claude Artifact. `index.html` saknar `<html>`/`<head>`/`<body>`-taggar
-eftersom Artifact lägger till dem; webbläsare visar den ändå korrekt. När vi väljer host lägger vi till ett fullständigt dokumentskal.
+`index.html` och `handritad.html` är källfilerna. De är skrivna för förhandsvisning i Claude och saknar
+därför `<html>`/`<head>`/`<body>`.
+
+Webbplatsen för GitHub Pages byggs i mappen `docs/`:
+
+```
+python3 bygg.py
+```
+
+Skriptet lägger till sidans skal och kopierar bilderna. Kör det efter varje ändring och committa `docs/`.
+
+Adresser när GitHub Pages är påslaget (källa: grenen med koden, mappen `/docs`):
+
+- https://olssonjoakim-hub.github.io/paraden/
+- https://olssonjoakim-hub.github.io/paraden/handritad.html
