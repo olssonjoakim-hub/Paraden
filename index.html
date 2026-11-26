@@ -149,18 +149,25 @@ body::after {
   overflow: hidden;
   padding-block: clamp(80px, 14vh, 160px);
 }
+/* Rad med illustrationer av paraddräkterna, svaga i bakgrunden */
 .ghost {
   position: absolute;
-  top: 6%;
+  top: 8%;
   left: 0;
-  white-space: nowrap;
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(32px, 6vw, 110px);
   pointer-events: none;
-  font: 900 clamp(7rem, 24vw, 22rem)/1 var(--display);
-  letter-spacing: -.02em;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(21, 21, 21, .1);
+  opacity: .14;
   will-change: transform;
 }
+.ghost img {
+  height: clamp(260px, 60vh, 600px);
+  width: auto;
+  max-width: none;
+  flex: none;
+}
+.ghost img:nth-child(even) { margin-bottom: 6vh; }
 .manifest__grid {
   position: relative;
   display: grid;
@@ -496,7 +503,7 @@ body::after {
 
 <main>
   <section class="manifest" id="om" aria-labelledby="om-rubrik">
-    <div class="ghost" id="ghost" aria-hidden="true">PARADEN PARADEN PARADEN</div>
+    <div class="ghost" id="ghost" aria-hidden="true"><img src="bilder/figur-1.webp" alt="" loading="lazy" decoding="async"><img src="bilder/figur-2.webp" alt="" loading="lazy" decoding="async"><img src="bilder/figur-3.webp" alt="" loading="lazy" decoding="async"><img src="bilder/figur-4.webp" alt="" loading="lazy" decoding="async"><img src="bilder/figur-5.webp" alt="" loading="lazy" decoding="async"></div>
     <div class="wrap manifest__grid">
       <div class="manifest__intro" data-speed=".06">
         <p class="eyebrow" id="om-rubrik">Om verket</p>
@@ -946,7 +953,7 @@ body::after {
     }
 
     const pm = progress(manifest, vh);
-    ghost.style.transform = `translate3d(${lerp(5, -45, pm)}vw, ${lerp(0, 40, pm)}vh, 0)`;
+    ghost.style.transform = `translate3d(${lerp(15, -75, pm)}vw, ${lerp(0, 18, pm)}vh, 0)`;
     const line = vh * .7;
     for (const s of sentences) {
       const r = s.getBoundingClientRect();
