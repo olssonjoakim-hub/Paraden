@@ -284,6 +284,7 @@ body {
 #map .seg { fill: none; stroke: var(--graphite); stroke-linecap: round; }
 #map .seg-a { stroke-width: 1.9; opacity: .9; }
 #map .seg-b { stroke-width: .9; opacity: .45; }
+#map .seg-a { stroke: url(#grafit); }
 #map .seg.future { stroke-dasharray: 7 8; }
 .anim #map .seg { stroke-dashoffset: var(--off, 0); }
 .anim #map.is-drawn .seg { stroke-dashoffset: 0; transition: stroke-dashoffset .85s cubic-bezier(.5, 0, .3, 1) var(--d); }
@@ -811,7 +812,51 @@ body { font-synthesis: none; }
   const X = lon => (lon - 17) * 350;          // ~cos(60°) gånger skalan
   const Y = lat => (60.55 - lat) * 700;
   const map = $('#map');
-  const DEF = '';
+  // Blyertsutseende utan levande filter (som Safari annars räknar om hela tiden):
+  // darret räknas fram en gång och ligger i linjernas form, och grafitkornet är en liten
+  // färdig bild (bilder/grafit.png) som fyller huvudlinjen.
+  const DEF = '<defs><clipPath id="kvart" clipPathUnits="userSpaceOnUse"><rect x="0" y="0" width="80" height="80"/></clipPath><pattern id="grafit" patternUnits="userSpaceOnUse" width="48" height="48"><image href="bilder/grafit.png" width="48" height="48"/></pattern></defs>';
+  const pr = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(31337);
+  const fx = n => n.toFixed(1);
+  // Brus längs en linje: mjuka vågor plus fint skakande, högst ±amp enheter
+  const shaker = (amp, n) => {
+    const k = Array.from({ length: Math.ceil(n / 5) + 2 }, () => pr() * 2 - 1);
+    return i => {
+      const a = Math.floor(i / 5), t = (i % 5) / 5, sm = t * t * (3 - 2 * t);
+      return amp * (.25 * (k[a] * (1 - sm) + k[a + 1] * sm) + .75 * (pr() * 2 - 1));
+    };
+  };
+  // Punkter längs en kvadratisk kurva (eller rak linje), var ~1,6:e enhet, med normalriktning
+  const quadPts = (x1, y1, cx, cy, x2, y2) => {
+    const at = t => {
+      const u = 1 - t, dx = 2 * u * (cx - x1) + 2 * t * (x2 - cx), dy = 2 * u * (cy - y1) + 2 * t * (y2 - cy), l = Math.hypot(dx, dy) || 1;
+      return [u * u * x1 + 2 * u * t * cx + t * t * x2, u * u * y1 + 2 * u * t * cy + t * t * y2, -dy / l, dx / l];
+    };
+    let L = 0, [px, py] = at(0);
+    for (let i = 1; i <= 40; i++) { const [x, y] = at(i / 40); L += Math.hypot(x - px, y - py); px = x; py = y; }
+    return [Math.max(2, Math.ceil(L / 1.1)), at];
+  };
+  const linePts = (x1, y1, x2, y2) => quadPts(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2, x2, y2);
+  const wobble = ([n, at], amp) => {
+    const sh = shaker(amp, n);
+    let d = '';
+    for (let i = 0; i <= n; i++) { const [x, y, nx, ny] = at(i / n), o = sh(i); d += (i ? 'L' : 'M') + fx(x + nx * o) + ' ' + fx(y + ny * o); }
+    return d;
+  };
+  // En blyertsring; med passes > 1 och shape > 0 blir den handdragen med varv som inte möts
+  const ring = (rx, ry, amp, passes = 1, shape = 0) => {
+    let d = '';
+    for (let q = 0; q < passes; q++) {
+      const a0 = passes > 1 ? pr() * Math.PI * 2 : 0, turn = passes > 1 ? 1.04 + pr() * .1 : 1, ph = pr() * 6;
+      const n = Math.ceil(2 * Math.PI * rx * turn / 1.2), sh = shaker(amp, n);
+      for (let i = 0; i <= n; i++) {
+        const a = a0 + turn * Math.PI * 2 * i / n, k = 1 + shape * Math.sin(a * 2 + ph), o = sh(i);
+        d += (i ? 'L' : 'M') + fx(Math.cos(a) * (rx * k + o)) + ' ' + fx(Math.sin(a) * (ry * k + o));
+      }
+      if (passes === 1) d += 'Z';
+    }
+    return d;
+  };
 
   const mapR = rngFrom(4242);
   let svg = DEF;
@@ -830,9 +875,11 @@ body { font-synthesis: none; }
   // Skalstock (20 km) och nordpil
   const km = 700 / 111;
   const sx = 24, sy = 880;
-  svg += `<g><path class="furniture" d="M${sx} ${sy} h${20 * km} M${sx} ${sy - 5} v10 M${sx + 10 * km} ${sy - 4} v8 M${sx + 20 * km} ${sy - 5} v10"/></g>
+  const bar = [linePts(sx, sy, sx + 20 * km, sy), linePts(sx, sy - 5, sx, sy + 5), linePts(sx + 10 * km, sy - 4, sx + 10 * km, sy + 4), linePts(sx + 20 * km, sy - 5, sx + 20 * km, sy + 5)].map(l => wobble(l, .9)).join(' ');
+  svg += `<g><path class="furniture" d="${bar}"/></g>
     <text class="furniture-txt" x="${sx}" y="${sy - 12}">0</text><text class="furniture-txt" x="${sx + 10 * km - 6}" y="${sy - 12}">10</text><text class="furniture-txt" x="${sx + 20 * km - 6}" y="${sy - 12}">20 km</text>`;
-  svg += `<g><path class="furniture" d="M780 70 L768 104 L780 96 L792 104 Z"/></g><text class="furniture-txt" x="780" y="58" text-anchor="middle">N</text>`;
+  const arrow = [[780, 70, 768, 104], [768, 104, 780, 96], [780, 96, 792, 104], [792, 104, 780, 70]].map(([a, b, c, e]) => wobble(linePts(a, b, c, e), .8)).join(' ');
+  svg += `<g><path class="furniture" d="${arrow}"/></g><text class="furniture-txt" x="780" y="58" text-anchor="middle">N</text>`;
   svg += '</g>';
 
   // Rutten, i tidsordning
@@ -847,7 +894,9 @@ body { font-synthesis: none; }
     const d = `M${x1.toFixed(1)} ${y1.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`;
     const fut = VISITS[i].status === 'Kommande' ? ' future' : '';
     const delay = T0 + (i - 1) * STEP;
-    segs += `<g style="--d:${delay}s"><path class="seg seg-a${fut}" d="${d}"/><path class="seg seg-b${fut}" d="${d}" transform="translate(.9 .7)"/></g>`;
+    const da = wobble(quadPts(x1, y1, cx, cy, x2, y2), .9);
+    const db = wobble(quadPts(x1 + .9, y1 + .7, cx + .9, cy + .7, x2 + .9, y2 + .7), .7);
+    segs += `<g style="--d:${delay}s"><path class="seg seg-a${fut}" d="${da}"/><path class="seg seg-b${fut}" d="${db}"/></g>`;
   }
   svg += segs;
 
@@ -860,13 +909,13 @@ body { font-synthesis: none; }
     const tx = left ? -26 : 26, anchor = left ? 'end' : 'start';
     const town = p.ort.toUpperCase();
     const ulW = town.length * 15.5;
-    const ul = left ? `M${tx} 14 l${-ulW} 1.5` : `M${tx} 14 l${ulW} 1.5`;
+    const ul = wobble(linePts(tx, 14, left ? tx - ulW : tx + ulW, 15.5), .8);
     const dates = p.besok.map((b, j) => `<text class="lbl-detail" x="${tx}" y="${50 + j * 17}">${b.text}</text>`).join('');
     svg += `<g class="pin" data-id="${p.id}" tabindex="0" role="button" aria-label="${p.ort}, ${p.lokal}. Öppna galleri" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" style="--d:${d.toFixed(2)}s">
       <circle class="pin-hit" r="34"/>
       <g class="pin-in">
-        <path class="pin-ring2" d="${hEllipse(mapR, 0, 0, 15, 14)}"/>
-        <path class="pin-ring" d="${hEllipse(mapR, 0, 0, 10, 9.5)}"/>
+        <g clip-path="url(#kvart)"><path class="pin-ring2" d="${ring(15, 14, 1, 2, .05)}"/>
+        <path class="pin-ring" d="${ring(10, 9.5, 1, 2, .05)}"/></g>
         <circle class="pin-dot" r="4"/>
       </g>
       <g class="pin-lbl" text-anchor="${anchor}">
