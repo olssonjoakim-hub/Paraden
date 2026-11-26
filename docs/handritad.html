@@ -813,7 +813,9 @@ body { font-synthesis: none; }
       const strokes = paths.map(([d, zone], j) => {
         const dl = .15 + i * .12 + j * .22 + rnd() * .55, t = .75 + rnd() * .6;
         end = Math.max(end, dl + t);
-        return `<g clip-path="url(#z-${zone})"><path class="st" pathLength="1" d="${d}" clip-path="url(#gl${i})" style="--dl:${dl.toFixed(2)}s;--t:${t.toFixed(2)}s"/></g>`;
+        // Klippningen sitter på grupper med en osynlig ruta, så att raka streck inte får ytan noll
+        // (då ritar Safari dem som hårfina linjer).
+        return `<g clip-path="url(#z-${zone})"><g clip-path="url(#gl${i})"><rect x="-160" y="-160" width="1160" height="1060" fill="none"/><path class="st" pathLength="1" d="${d}" style="--dl:${dl.toFixed(2)}s;--t:${t.toFixed(2)}s"/></g></g>`;
       }).join('');
       defs += `<clipPath id="gl${i}" clipPathUnits="userSpaceOnUse"><text x="0" y="700">${ch}</text></clipPath>`;
       strokesG += `<g transform="translate(${x} 0)">${strokes}</g>`;
