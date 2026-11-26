@@ -446,7 +446,8 @@ body {
 .sk path { fill: none; stroke: currentColor; stroke-width: 1.15; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
 .sk.soft path { opacity: .42; }
 .rule .sk path { stroke-width: 1.8; opacity: 1; }
-.room figure, .portraits .pf, .film { position: relative; }
+.room figure, .portraits .pf, .film { position: relative; overflow: visible; }
+.clip { position: absolute; inset: 0; overflow: hidden; display: block; }
 .room figure .sk path, .portraits .pf .sk path, .film .sk path { stroke: var(--chalk); stroke-width: 1.4; opacity: .9; }
 
 /* ---------- Smal skärm ---------- */
@@ -459,6 +460,7 @@ body {
   .portraits figure { scroll-snap-align: start; }
   .room { flex-direction: column; }
   .room figure { flex: none !important; aspect-ratio: auto !important; }
+  .room .clip { position: relative; }
   #map .lbl-detail { display: none; }
   #map .lbl-town { font-size: 26px; letter-spacing: .06em; }
   #map .lbl-num { font-size: 16px; }
@@ -602,33 +604,10 @@ body {
   const SK = [
     ['.rule', 'hline'], ['.stops', 'top soft'], ['.stops li', 'bottom soft'], ['.stop-status', 'box'],
     ['.g-close', 'box'], ['.g-sec', 'top soft'], ['.gallery__nav', 'top soft'],
-    ['.room figure', 'ragged'], ['.portraits .pf', 'ragged'], ['.film', 'ragged']
+    ['.room figure', 'frame'], ['.portraits .pf', 'frame'], ['.film', 'frame']
   ];
   let skSeed = 101;
-  // Lätt handdragen kant: varje sida är en nästan rak linje med en svag, mjuk böj,
-  // som de handritade linjerna (clip-path, billigt även i Safari)
-  const raggedEdge = el => {
-    const w = el.offsetWidth, h = el.offsetHeight;
-    if (!w || !h) return;
-    const r = rngFrom(el.__seed), pts = [];
-    const side = (len, f) => {
-      // två mjuka vågor med slumpad fas och höjd, plus nästan omärkligt darr
-      const a1 = .6 + r() * 1.1, a2 = .3 + r() * .6, p1 = r() * 6.3, p2 = r() * 6.3, tilt = (r() - .5) * 1.6;
-      const n = Math.max(8, Math.ceil(len / 6));
-      for (let i = 0; i < n; i++) {
-        const t = i / n;
-        const k = 1.6 + a1 * Math.sin(t * Math.PI + p1) * Math.sin(t * Math.PI) + a2 * Math.sin(t * 2 * Math.PI + p2) + tilt * (t - .5) + (r() - .5) * .25;
-        pts.push(f(t, Math.max(0, k)));
-      }
-    };
-    side(w, (t, k) => [t * w, k]);
-    side(h, (t, k) => [w - k, t * h]);
-    side(w, (t, k) => [w - t * w, h - k]);
-    side(h, (t, k) => [k, h - t * h]);
-    el.style.clipPath = `polygon(${pts.map(([x, y]) => `${x.toFixed(1)}px ${y.toFixed(1)}px`).join(',')})`;
-  };
   const drawSk = el => {
-    if (el.__sk === 'ragged') { raggedEdge(el); return; }
     const w = el.offsetWidth, h = el.offsetHeight;
     if (!w || !h) return;
     let svg = el.querySelector(':scope > svg.sk');
@@ -646,7 +625,7 @@ body {
     else if (kind === 'bottom') d = hLine2(r, 0, h - .5, w, h - .5);
     else if (kind === 'hline') d = hLine2(r, 0, h / 2, w, h / 2, 1.8);
     else {
-      const i = kind === 'frame' ? 4 : 0;
+      const i = kind === 'frame' ? -1.5 : 0;
       d = [hLine(r, i, i, w - i, i), hLine(r, w - i, i, w - i, h - i), hLine(r, w - i, h - i, i, h - i), hLine(r, i, h - i, i, i)].join(' ');
       if (kind === 'frame') d += ' ' + hLine(r, i + 2, i + 1, w - i - 3, i + 2);
     }
@@ -961,14 +940,14 @@ body {
     // I den här versionen är lokalen huvudrubrik och orten står under, med datumen.
     $('#g-title').textContent = p.lokal;
     $('#g-venue').innerHTML = `${p.ort}<br>${p.besok.map(b => b.text).join('<br>')}`;
-    $('#g-film').innerHTML = p.video
+    $('#g-film').innerHTML = '<div class="clip">' + (p.video
       ? `<video src="${p.video}" controls playsinline preload="metadata" poster="${B}rum-mitten.jpg"></video>`
-      : `<img src="${B}rum-mitten.jpg" alt=""><div class="film-ph">${playIcon}<p>Filmen från paraden i ${p.ort} visas här.</p></div>`;
+      : `<img src="${B}rum-mitten.jpg" alt=""><div class="film-ph">${playIcon}<p>Filmen från paraden i ${p.ort} visas här.</p></div>`) + '</div>';
     $('#g-room').innerHTML = p.rum.map(([src, ratio, alt]) =>
-      `<figure style="flex:${ratio};aspect-ratio:${ratio}" tabindex="0" role="button" aria-label="Visa större: ${alt}"><img src="${src}" alt="${alt}" loading="lazy"></figure>`).join('');
+      `<figure style="flex:${ratio};aspect-ratio:${ratio}" tabindex="0" role="button" aria-label="Visa större: ${alt}"><span class="clip"><img src="${src}" alt="${alt}" loading="lazy"></span></figure>`).join('');
     $('#g-portraits').innerHTML = p.portratt.map((n, i) => {
       const [src, alt] = P(n);
-      return `<figure tabindex="0" role="button" aria-label="Visa större: deltagare ${pad(i + 1)}"><div class="pf"><img src="${src}" alt="${alt}" loading="lazy"></div><figcaption>Deltagare ${pad(i + 1)}</figcaption></figure>`;
+      return `<figure tabindex="0" role="button" aria-label="Visa större: deltagare ${pad(i + 1)}"><div class="pf"><span class="clip"><img src="${src}" alt="${alt}" loading="lazy"></span></div><figcaption>Deltagare ${pad(i + 1)}</figcaption></figure>`;
     }).join('');
     const idx = ORDER.indexOf(p);
     const prev = ORDER[(idx - 1 + ORDER.length) % ORDER.length], next = ORDER[(idx + 1) % ORDER.length];
