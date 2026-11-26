@@ -88,23 +88,26 @@ body::after {
 .hero__inner {
   padding-top: clamp(28px, 6vh, 72px);
   display: grid;
-  gap: 14px;
+  gap: clamp(18px, 3vh, 32px);
   justify-items: center;
   will-change: transform, opacity;
 }
-.hero__title { margin: 0; width: min(94vw, 1380px); line-height: 0; }
+.hero__title { margin: 0; width: min(84vw, 1060px); line-height: 0; }
 .paint { width: 100%; height: auto; overflow: visible; }
-.paint text {
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: 200px;
-  fill: var(--chalk);
+/* Rubriken är ritad som linjer: varje streck ritas fram för sig */
+.paint path {
+  fill: none;
+  stroke: var(--chalk);
+  stroke-width: 10;
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
+  stroke-miterlimit: 12;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
 }
-.paint .bs { stroke-dasharray: 1 1; stroke-dashoffset: 1; }
-.paint.go .bs {
+.paint.go path {
   stroke-dashoffset: 0;
-  transition: stroke-dashoffset .62s cubic-bezier(.55, 0, .25, 1);
-  transition-delay: calc(var(--i) * .38s + .2s);
+  transition: stroke-dashoffset var(--t, .9s) cubic-bezier(.6, 0, .2, 1) var(--dl, 0s);
 }
 .hero__kicker {
   margin: 0;
@@ -113,7 +116,7 @@ body::after {
   text-transform: uppercase;
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity 1s ease 1.9s, transform 1s ease 1.9s;
+  transition: opacity 1s ease 2.5s, transform 1s ease 2.5s;
 }
 .go-kicker .hero__kicker { opacity: .85; transform: none; }
 .hero__cue {
@@ -485,23 +488,7 @@ body::after {
   <div class="hero__inner">
     <h1 class="hero__title">
       <span class="sr-only">Paraden</span>
-      <svg class="paint" id="paint" viewBox="0 0 1000 220" aria-hidden="true">
-        <defs>
-          <filter id="brush" filterUnits="userSpaceOnUse" x="-60" y="-40" width="1120" height="300">
-            <feTurbulence type="fractalNoise" baseFrequency="0.012 0.32" numOctaves="3" seed="7" result="n"/>
-            <feDisplacementMap in="SourceGraphic" in2="n" scale="34" xChannelSelector="R" yChannelSelector="G"/>
-          </filter>
-          <mask id="paintMask" maskUnits="userSpaceOnUse" x="-60" y="-40" width="1120" height="300">
-            <g filter="url(#brush)" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="66">
-              <path class="bs" style="--i:0" pathLength="1" d="M-50 50 C 260 38, 720 64, 1050 46"/>
-              <path class="bs" style="--i:1" pathLength="1" d="M1050 100 C 700 110, 300 90, -50 104"/>
-              <path class="bs" style="--i:2" pathLength="1" d="M-50 152 C 300 144, 700 162, 1050 148"/>
-              <path class="bs" style="--i:3" pathLength="1" d="M1050 200 C 700 208, 300 190, -50 202"/>
-            </g>
-          </mask>
-        </defs>
-        <text x="500" y="188" text-anchor="middle" textLength="970" lengthAdjust="spacingAndGlyphs" mask="url(#paintMask)">PARADEN</text>
-      </svg>
+      <svg class="paint" id="paint" viewBox="0 0 600 100" aria-hidden="true"></svg>
     </h1>
     <p class="hero__kicker">Kropp · Skulptur · Koreografi</p>
   </div>
@@ -643,8 +630,37 @@ body::after {
 
   if (!reduce) document.documentElement.classList.add('anim');
 
-  /* ================= Rubriken målas in ================= */
+  /* ================= Rubriken ritas fram, streck för streck ================= */
   const paint = $('#paint');
+  {
+    // Geometriska bokstäver på en höjd av 100. Streckens mitt ligger 5 in från kanten (strecket är 10 brett).
+    // Linjer förlängs utanför 0–100 och klipps, så att ändarna blir raka mot topp och baslinje.
+    const stem = 'M5 106 V-6';
+    const bowl = 'M5 5 H44 A23 23 0 0 1 44 51 H5';
+    const G = {
+      P: [72, [stem, bowl]],
+      A: [78, ['M0.5 106 L39 -8 L77.5 106', 'M14 70 H64']],
+      R: [72, [stem, bowl, 'M36 51 L70 106']],
+      D: [85, [stem, 'M5 5 H35 A45 45 0 0 1 35 95 H5']],
+      E: [60, [stem, 'M0 5 H58', 'M0 50 H52', 'M0 95 H60']],
+      N: [76, [stem, 'M1 -6 L75 106', 'M71 -6 V106']]
+    };
+    let seed = 11;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    let x = 0, out = '';
+    [...'PARADEN'].forEach((ch, i) => {
+      const [w, paths] = G[ch];
+      paths.forEach((d, j) => {
+        const dl = (.15 + i * .12 + j * .22 + rnd() * .55).toFixed(2);
+        const t = (.75 + rnd() * .6).toFixed(2);
+        out += `<path pathLength="1" d="${d}" transform="translate(${x} 0)" style="--dl:${dl}s;--t:${t}s"/>`;
+      });
+      x += w + 24;
+    });
+    const total = x - 24;
+    paint.setAttribute('viewBox', `0 0 ${total} 100`);
+    paint.innerHTML = `<defs><clipPath id="capClip"><rect x="-2" y="0" width="${total + 4}" height="100"/></clipPath></defs><g clip-path="url(#capClip)">${out}</g>`;
+  }
   const startPaint = () => {
     paint.classList.add('go');
     document.body.classList.add('go-kicker');
