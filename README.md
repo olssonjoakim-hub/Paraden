@@ -25,6 +25,13 @@ platshållare. Gör ändringen i både `index.html` och `handritad.html`.
 Just nu går kommande nedslag inte att klicka på (`KOMMANDE_KLICKBARA = false`). Sätt den till
 `true` i båda filerna för att visa deras sidor igen.
 
+### Huvudbilden
+
+Huvudbilden består av två lager som rör sig i olika takt: väggen (`bilder/hero-vagg.jpg`) och de
+frilagda föremålen (`bilder/hero-objekt.webp`), skapade från `bilder/hero-original.jpg`. För att gå
+tillbaka till det tidigare fotot av rummet: ta bort klassen `hero--lager` på `<header class="hero …">`
+i båda filerna.
+
 ## Publicering
 
 `index.html` och `handritad.html` är källfilerna. De är skrivna för förhandsvisning i Claude och saknar
