@@ -450,6 +450,14 @@ body {
 .clip { position: absolute; inset: 0; overflow: hidden; display: block; }
 .room figure .sk path, .portraits .pf .sk path, .film .sk path { stroke: var(--chalk); stroke-width: 1.4; opacity: .9; }
 
+/* Kommande nedslag: kort information och en bild */
+.up { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 24px clamp(24px, 4vw, 56px); align-items: start; }
+.up-text { margin: 0; font-size: clamp(1.05rem, 1.4vw, 1.25rem); line-height: 1.55; max-width: 36ch; text-wrap: pretty; }
+.up-fig { margin: 0; position: relative; aspect-ratio: 4 / 3; max-width: 100%; background: rgba(21, 21, 21, .07); display: grid; place-items: center; }
+.up-fig img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.up-ph { font: 400 12px/1.4 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: rgba(21, 21, 21, .45); text-align: center; padding: 16px; }
+@media (max-width: 860px) { .up { grid-template-columns: minmax(0, 1fr); } }
+
 /* ---------- Smal skärm ---------- */
 @media (max-width: 860px) {
   .manifest__grid { grid-template-columns: minmax(0, 1fr); }
@@ -542,17 +550,24 @@ body {
         <p class="g-venue" id="g-venue"></p>
       </header>
       <div style="display:grid;gap:clamp(28px,5vh,48px);margin-top:clamp(28px,5vh,48px)">
-        <section class="g-sec rv" style="--k:0">
+        <section class="g-sec g-normal rv" style="--k:0">
           <h3>Film <small>Paraden</small></h3>
           <div class="film" id="g-film"></div>
         </section>
-        <section class="g-sec rv" style="--k:1">
+        <section class="g-sec g-normal rv" style="--k:1">
           <h3>Rummet <small>Installationen</small></h3>
           <div class="room" id="g-room"></div>
         </section>
-        <section class="g-sec rv" style="--k:2">
+        <section class="g-sec g-normal rv" style="--k:2">
           <h3>Porträtt <small>Deltagarna</small></h3>
           <div class="portraits" id="g-portraits"></div>
+        </section>
+        <section class="g-sec g-upcoming rv" style="--k:0" hidden>
+          <h3>Kommande <small>Nedslag</small></h3>
+          <div class="up">
+            <p class="up-text" id="g-up-text"></p>
+            <figure class="up-fig" id="g-up-fig"></figure>
+          </div>
         </section>
       </div>
     </div>
@@ -603,7 +618,7 @@ body {
   };
   const SK = [
     ['.rule', 'hline'], ['.stops', 'top soft'], ['.stops li', 'bottom soft'], ['.stop-status', 'box'],
-    ['.g-close', 'box'], ['.g-sec', 'top soft'], ['.gallery__nav', 'top soft'],
+    ['.g-close', 'box'], ['.up-fig', 'frame'], ['.g-sec', 'top soft'], ['.gallery__nav', 'top soft'],
     ['.room figure', 'frame'], ['.portraits .pf', 'frame'], ['.film', 'frame']
   ];
   let skSeed = 101;
@@ -659,7 +674,7 @@ body {
       video: null, rum: [R.hel, R.v], portratt: [1, 2, 3, 4] },
     { id: 'tierp', ort: 'Tierp', lokal: 'Tierps Konsthall', lat: 60.344, lon: 17.516, side: 'l',
       besok: [{ start: '2026-08-26', slut: '2026-08-27', text: '26–27 augusti 2026' },
-              { start: '2027-02-17', slut: '2027-02-24', text: '17–24 februari 2027' }],
+              { start: '2027-02-17', slut: '2027-02-24', text: '17–24 februari 2027', info: '', bild: '' }],
       video: null, rum: [R.hel, R.h], portratt: [2, 4, 1, 3] },
     { id: 'osthammar', ort: 'Östhammar', lokal: 'Storbrunn Kulturhus', lat: 60.258, lon: 18.374, side: 'r',
       besok: [{ start: '2026-10-05', slut: '2026-10-17', text: '5–17 oktober 2026' }],
@@ -668,7 +683,8 @@ body {
       besok: [{ start: '2026-11-01', slut: '2026-11-01', text: '1 november 2026' }],
       video: null, rum: [R.hel, R.v], portratt: [4, 3, 2, 1] },
     { id: 'stockholm', ort: 'Stockholm', lokal: 'Weld', lat: 59.329, lon: 18.068, side: 'l',
-      besok: [{ start: '2027-02-01', slut: '2027-02-14', text: '1–14 februari 2027' }],
+      // info: kort text, bild: sökväg till en bild (tomt = platshållare)
+      besok: [{ start: '2027-02-01', slut: '2027-02-14', text: '1–14 februari 2027', info: '', bild: '' }],
       video: null, rum: [R.hel, R.h], portratt: [1, 3, 2, 4] }
   ];
 
@@ -891,7 +907,7 @@ body {
   const stops = $('#stops');
   stops.innerHTML = VISITS.map((v, i) => `
     <li style="--d:${(T0 + i * STEP * .7).toFixed(2)}s">
-      <button class="stop" type="button" data-id="${v.place.id}">
+      <button class="stop" type="button" data-id="${v.place.id}" data-visit="${v.n}">
         <span class="stop-n">${pad(v.n)}</span>
         <span class="stop-town">${v.place.ort}</span>
         <span class="stop-venue">${v.place.lokal}</span>
@@ -920,7 +936,7 @@ body {
     el.addEventListener('pointerleave', () => hot(el.dataset.id, false));
     el.addEventListener('focus', () => hot(el.dataset.id, true));
     el.addEventListener('blur', () => hot(el.dataset.id, false));
-    el.addEventListener('click', e => openGallery(el.dataset.id, e));
+    el.addEventListener('click', e => openGallery(el.dataset.id, e, el.dataset.visit));
   });
   map.addEventListener('keydown', e => {
     const pin = e.target.closest && e.target.closest('.pin');
@@ -934,8 +950,33 @@ body {
 
   const playIcon = `<svg viewBox="0 0 64 64" aria-hidden="true" style="overflow:visible"><path d="${hEllipse(rngFrom(77), 32, 32, 30, 29)}" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="${hLine(rngFrom(78), 26, 20, 26, 44)} ${hLine(rngFrom(79), 26, 20, 46, 32)} ${hLine(rngFrom(80), 46, 32, 26, 44)}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`;
 
-  function fill(p) {
+  function fill(p, visit) {
     const vs = VISITS.filter(v => v.place === p);
+    // Kommande nedslag får en enklare sida: kort information och en bild.
+    // Klickar man på ett kommande besök i listan visas det besöket, även om platsen haft tidigare besök.
+    const picked = visit ? vs.find(v => v.n === +visit) : null;
+    const up = picked ? picked.status === 'Kommande' : vs.every(v => v.status === 'Kommande');
+    document.querySelectorAll('#gallery .g-normal').forEach(el => { el.hidden = up; });
+    $('#gallery .g-upcoming').hidden = !up;
+    if (up) {
+      const uv = picked ? [picked] : vs;
+      const besok = uv.map(v => p.besok.find(b => b.start === v.start));
+      const info = besok.find(b => b.info) || {};
+      $('#g-meta').textContent = 'Nedslag ' + uv.map(v => pad(v.n)).join(' & ') + ' · Kommande';
+      $('#g-title').textContent = p.lokal;
+      $('#g-venue').innerHTML = `${p.ort}<br>${besok.map(b => b.text).join('<br>')}`;
+      $('#g-up-text').textContent = info.info || `PARADEN gör nedslag på ${p.lokal} i ${p.ort} ${besok.map(b => b.text).join(' och ')}. Mer information om tider och program kommer.`;
+      $('#g-up-fig').innerHTML = info.bild
+        ? `<img src="${info.bild}" alt="${p.lokal}, ${p.ort}" loading="lazy">`
+        : `<span class="up-ph">Bild från ${p.lokal} kommer</span>`;
+      sketch(dlg);
+      const idx = ORDER.indexOf(p);
+      const prev = ORDER[(idx - 1 + ORDER.length) % ORDER.length], next = ORDER[(idx + 1) % ORDER.length];
+      $('#g-prev').textContent = '← ' + prev.ort; $('#g-prev').dataset.id = prev.id;
+      $('#g-next').textContent = next.ort + ' →'; $('#g-next').dataset.id = next.id;
+      current = p;
+      return;
+    }
     $('#g-meta').textContent = 'Nedslag ' + vs.map(v => pad(v.n)).join(' & ') + ' · ' + vs.map(v => v.status).filter((s, i, a) => a.indexOf(s) === i).join(' / ');
     // I den här versionen är lokalen huvudrubrik och orten står under, med datumen.
     $('#g-title').textContent = p.lokal;
@@ -959,7 +1000,7 @@ body {
     sketch(dlg);
   }
 
-  function openGallery(id, e) {
+  function openGallery(id, e, visit) {
     const p = PLACES.find(x => x.id === id);
     if (!p) return;
     lastFocus = document.activeElement;
@@ -970,7 +1011,7 @@ body {
     }
     dlg.style.setProperty('--cx', cx + 'px');
     dlg.style.setProperty('--cy', cy + 'px');
-    fill(p);
+    fill(p, visit);
     dlg.scrollTop = 0;
     if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
     document.documentElement.style.overflow = 'hidden';

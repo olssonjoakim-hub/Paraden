@@ -16,6 +16,12 @@ Platserna ligger i listan `PLACES` i skriptet längst ner i `index.html`. För v
 - `rum`: bilder på rummet.
 - `portratt`: porträtt av deltagarna.
 
+### Kommande nedslag
+
+Kommande besök får en enklare sida med kort text och en bild. Fyll i `info` (texten) och `bild`
+(sökväg, t.ex. `bilder/weld.jpg`) på besöket i `PLACES`. Tomma fält ger en standardtext och en
+platshållare. Gör ändringen i både `index.html` och `handritad.html`.
+
 ## Publicering
 
 `index.html` och `handritad.html` är källfilerna. De är skrivna för förhandsvisning i Claude och saknar
