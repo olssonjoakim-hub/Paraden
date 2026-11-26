@@ -22,6 +22,9 @@ Kommande besök får en enklare sida med kort text och en bild. Fyll i `info` (t
 (sökväg, t.ex. `bilder/weld.jpg`) på besöket i `PLACES`. Tomma fält ger en standardtext och en
 platshållare. Gör ändringen i både `index.html` och `handritad.html`.
 
+Just nu går kommande nedslag inte att klicka på (`KOMMANDE_KLICKBARA = false`). Sätt den till
+`true` i båda filerna för att visa deras sidor igen.
+
 ## Publicering
 
 `index.html` och `handritad.html` är källfilerna. De är skrivna för förhandsvisning i Claude och saknar

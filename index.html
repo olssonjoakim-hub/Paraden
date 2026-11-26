@@ -441,6 +441,11 @@ body {
 .up-ph { font: 400 12px/1.4 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: rgba(21, 21, 21, .45); text-align: center; padding: 16px; }
 @media (max-width: 860px) { .up { grid-template-columns: minmax(0, 1fr); } }
 
+/* Låsta (kommande) nedslag: syns men går inte att klicka på */
+#map .pin.is-locked { pointer-events: none; }
+.stop.is-locked { cursor: default; }
+.stop.is-locked:hover, .stop.is-locked.hot { padding-left: 4px; background: none; }
+
 /* ---------- Smal skärm ---------- */
 @media (max-width: 860px) {
   .manifest__grid { grid-template-columns: minmax(0, 1fr); }
@@ -602,6 +607,10 @@ body {
       video: null, rum: [R.hel, R.h], portratt: [1, 3, 2, 4] }
   ];
 
+  // Kommande nedslag går inte att klicka på just nu. Sätt till true för att visa deras sidor igen.
+  const KOMMANDE_KLICKBARA = false;
+  const låst = p => !KOMMANDE_KLICKBARA && p.besok.every(b => status(b) === 'Kommande');
+
   const now = new Date();
   const status = b => {
     const s = new Date(b.start + 'T00:00:00'), e = new Date(b.slut + 'T23:59:59');
@@ -615,7 +624,7 @@ body {
   const pad = n => String(n).padStart(2, '0');
   const numsFor = p => VISITS.filter(v => v.place === p).map(v => pad(v.n));
   // Ordning för galleriets bläddring: efter första besöket
-  const ORDER = [...PLACES].sort((a, b) => numsFor(a)[0].localeCompare(numsFor(b)[0]));
+  const ORDER = [...PLACES].filter(p => !låst(p)).sort((a, b) => numsFor(a)[0].localeCompare(numsFor(b)[0]));
 
   if (!reduce) document.documentElement.classList.add('anim');
 
@@ -787,7 +796,7 @@ body {
     const ulW = town.length * 15.5;
     const ul = wobble(linePts(tx, 14, left ? tx - ulW : tx + ulW, 15.5), .8);
     const dates = p.besok.map((b, j) => `<text class="lbl-detail" x="${tx}" y="${50 + j * 17}">${b.text}</text>`).join('');
-    svg += `<g class="pin" data-id="${p.id}" tabindex="0" role="button" aria-label="${p.ort}, ${p.lokal}. Öppna galleri" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" style="--d:${d.toFixed(2)}s">
+    svg += `<g class="pin${låst(p) ? ' is-locked' : ''}" data-id="${p.id}"${låst(p) ? '' : ` tabindex="0" role="button" aria-label="${p.ort}, ${p.lokal}. Öppna galleri"`} transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" style="--d:${d.toFixed(2)}s">
       <circle class="pin-hit" r="34"/>
       <g class="pin-in">
         <g clip-path="url(#kvart)"><path class="pin-ring2" d="${ring(15, 15, 1)}"/>
@@ -819,16 +828,17 @@ body {
 
   // Lista
   const stops = $('#stops');
+  const lockV = v => !KOMMANDE_KLICKBARA && v.status === 'Kommande';
   stops.innerHTML = VISITS.map((v, i) => `
     <li style="--d:${(T0 + i * STEP * .7).toFixed(2)}s">
-      <button class="stop" type="button" data-id="${v.place.id}" data-visit="${v.n}">
+      <${lockV(v) ? 'div' : 'button type="button"'} class="stop${lockV(v) ? ' is-locked' : ''}" data-id="${v.place.id}" data-visit="${v.n}">
         <span class="stop-n">${pad(v.n)}</span>
         <span class="stop-town">${v.place.ort}</span>
         <span class="stop-venue">${v.place.lokal}</span>
         <span class="stop-date">${v.text}</span>
         ${v.status === 'Genomförd' ? '' : `<span class="stop-status${v.status === 'Kommande' ? ' is-future' : ''}">${v.status}</span>`}
-        <span class="stop-arrow" aria-hidden="true">→</span>
-      </button>
+        ${lockV(v) ? '' : '<span class="stop-arrow" aria-hidden="true">→</span>'}
+      </${lockV(v) ? 'div' : 'button'}>
     </li>`).join('');
 
   const drawMap = () => { map.classList.add('is-drawn'); stops.classList.add('is-drawn'); };
@@ -844,7 +854,7 @@ body {
   const hot = (id, on) => {
     document.querySelectorAll(`[data-id="${id}"]`).forEach(el => el.classList.toggle('hot', on));
   };
-  document.querySelectorAll('.pin, .stop').forEach(el => {
+  document.querySelectorAll('.pin:not(.is-locked), .stop:not(.is-locked)').forEach(el => {
     el.addEventListener('pointerenter', () => hot(el.dataset.id, true));
     el.addEventListener('pointerleave', () => hot(el.dataset.id, false));
     el.addEventListener('focus', () => hot(el.dataset.id, true));
@@ -852,7 +862,7 @@ body {
     el.addEventListener('click', e => openGallery(el.dataset.id, e, el.dataset.visit));
   });
   map.addEventListener('keydown', e => {
-    const pin = e.target.closest && e.target.closest('.pin');
+    const pin = e.target.closest && e.target.closest('.pin:not(.is-locked)');
     if (pin && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openGallery(pin.dataset.id, e); }
   });
 
