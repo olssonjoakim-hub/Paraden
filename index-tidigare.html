@@ -1020,29 +1020,6 @@ body::after {
     request();
   }, { passive: true });
 
-  // Telefon: lutningen (gyroskopet) styr samma parallax som musen gör på datorn.
-  // iPhone kräver att besökaren godkänner rörelsesensorn; frågan visas vid första tryckningen.
-  let tiltBase = null;
-  const onTilt = e => {
-    if (e.gamma == null || e.beta == null) return;
-    if (tiltBase === null) tiltBase = e.beta;
-    mx = clamp(e.gamma / 45, -.5, .5);
-    my = clamp((e.beta - tiltBase) / 45, -.5, .5);
-    request();
-  };
-  const startTilt = () => addEventListener('deviceorientation', onTilt);
-  if ('DeviceOrientationEvent' in window) {
-    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-      const ask = () => {
-        DeviceOrientationEvent.requestPermission().then(r => {
-          removeEventListener('touchend', ask); removeEventListener('click', ask);
-          if (r === 'granted') startTilt();
-        }).catch(() => {});
-      };
-      addEventListener('touchend', ask, { passive: true });
-      addEventListener('click', ask);
-    } else startTilt();
-  }
 
   function progress(el, vh) {
     const r = el.getBoundingClientRect();
