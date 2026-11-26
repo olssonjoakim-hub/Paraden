@@ -33,3 +33,8 @@ Adresser när GitHub Pages är påslaget (källa: grenen med koden, mappen `/doc
 
 - https://olssonjoakim-hub.github.io/Paraden/
 - https://olssonjoakim-hub.github.io/Paraden/handritad.html
+
+Tidigare version (med levande blyertsfilter, långsammare i Safari), för jämförelse:
+
+- https://olssonjoakim-hub.github.io/Paraden/index-tidigare.html
+- https://olssonjoakim-hub.github.io/Paraden/handritad-tidigare.html
