@@ -515,6 +515,12 @@ body { font-synthesis: none; }
 /* Text med ojämna, blyertsaktiga kanter */
 .stop-town, .procession__line, .foot-name, .eyebrow { filter: url(#hand-s); }
 #map .lbl-town { filter: url(#hand-s); }
+/* Kartavsnittet: handskrivet typsnitt (utom rubriken) */
+.route__head p:last-child { font-family: var(--mono); font-size: 18px; line-height: 1.5; }
+.stop-town { font-family: var(--mono); font-weight: 400; font-size: 21px; letter-spacing: .06em; line-height: 1.2; }
+#map .lbl-town { font: 400 28px var(--mono); letter-spacing: .08em; }
+@media (max-width: 860px) { #map .lbl-town { font-size: 34px; letter-spacing: .04em; } }
+
 .eyebrow, .g-meta, .g-sec h3, .stop-n { letter-spacing: .08em; }
 .hero__kicker, .hero__cue { letter-spacing: .16em; }
 </style>
