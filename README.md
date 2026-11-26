@@ -34,7 +34,8 @@ Huvudversioner (bara dessa två utvecklas vidare):
 - https://olssonjoakim-hub.github.io/Paraden/ (mörk karta)
 - https://olssonjoakim-hub.github.io/Paraden/handritad.html (samma sida, handskrivet typsnitt)
 
-`handritad.html` ska vara identisk med `index.html` utom typsnitten. Gör ändringar i båda.
+`handritad.html` ska vara identisk med `index.html` utom typsnitten och de handritade linjerna
+(skisslinjer, ramar runt bilder, play-ikonen och ringarna på kartan). Gör ändringar i båda.
 
 Äldre versioner ligger i `arkiv/` och byggs inte. Deras gamla adresser (karta-mork.html,
 index-tidigare.html, handritad-tidigare.html) skickas vidare till huvudsidorna.

@@ -180,7 +180,7 @@ body {
   text-wrap: pretty;
 }
 .lede strong { font-weight: 800; letter-spacing: .04em; }
-.rule { width: 56px; height: 2px; background: var(--ink); }
+.rule { position: relative; width: 64px; height: 8px; }
 .manifest__text { display: grid; gap: 26px; min-width: 0; }
 .mani {
   margin: 0;
@@ -262,8 +262,8 @@ body {
 #map .furniture { stroke: var(--graphite); fill: none; stroke-width: 1.1; }
 #map .furniture-txt { font: 500 11px var(--mono); fill: var(--graphite); letter-spacing: .1em; }
 
-.stops { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--rule); min-width: 0; }
-.stops li { border-bottom: 1px solid var(--rule); }
+.stops { list-style: none; margin: 0; padding: 0; display: grid; min-width: 0; position: relative; }
+.stops li { position: relative; }
 .anim .stops li { opacity: 0; transform: translateX(-12px); }
 .anim .stops.is-drawn li { opacity: 1; transform: none; transition: opacity .6s ease var(--d), transform .6s var(--ease) var(--d); }
 .stop {
@@ -291,10 +291,11 @@ body {
   letter-spacing: .16em;
   text-transform: uppercase;
   padding: 5px 7px;
-  border: 1px solid currentColor;
+  position: relative;
   color: var(--graphite);
 }
-.stop-status.is-future { border-style: dashed; color: var(--mute); }
+.stop-status.is-future { color: var(--mute); }
+.stop-status.is-future .sk path { stroke-dasharray: 4 5; }
 .stop-arrow { grid-column: 3; grid-row: 2 / span 2; align-self: end; justify-self: end; font-size: 18px; transition: transform .35s var(--ease); }
 .stop:hover .stop-arrow, .stop.hot .stop-arrow { transform: translateX(4px); }
 
@@ -375,12 +376,12 @@ body {
   letter-spacing: .2em;
   text-transform: uppercase;
   padding: 12px 14px;
-  border: 1px solid rgba(21, 21, 21, .4);
+  position: relative;
   transition: background .3s ease, color .3s ease;
 }
 .g-close:hover, .g-close:focus-visible { background: var(--night); color: var(--chalk); }
 .g-close:focus-visible { outline: 2px solid var(--night); outline-offset: 3px; }
-.g-sec { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px 32px; border-top: 1px solid rgba(21, 21, 21, .2); padding-top: 20px; }
+.g-sec { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px 32px; padding-top: 20px; position: relative; }
 .g-sec h3 { margin: 0; font: 500 12px/1.6 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: rgba(21, 21, 21, .6); }
 .g-sec h3 small { display: block; letter-spacing: .1em; text-transform: none; color: rgba(21, 21, 21, .4); font-size: 11px; }
 .rv { opacity: 0; transform: translateY(24px); }
@@ -400,7 +401,7 @@ body {
 .portraits .pf { overflow: hidden; aspect-ratio: 476 / 718; max-width: 100%; background: var(--felt); }
 .portraits img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .portraits figcaption { font: 400 11px/1.4 var(--mono); letter-spacing: .1em; color: rgba(21, 21, 21, .5); text-transform: uppercase; }
-.gallery__nav { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid rgba(21, 21, 21, .2); padding-top: 20px; }
+.gallery__nav { display: flex; justify-content: space-between; gap: 12px; padding-top: 20px; position: relative; }
 .gallery__nav button {
   all: unset;
   cursor: pointer;
@@ -439,6 +440,14 @@ body {
 .stop-town { font-family: var(--mono); font-weight: 400; font-size: 21px; letter-spacing: .06em; line-height: 1.2; }
 #map .lbl-town { font: 400 28px var(--mono); letter-spacing: .08em; }
 @media (max-width: 860px) { #map .lbl-town { font-size: 34px; letter-spacing: .04em; } }
+
+/* ---------- Handritade linjer ---------- */
+.sk { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.sk path { fill: none; stroke: currentColor; stroke-width: 1.15; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
+.sk.soft path { opacity: .42; }
+.rule .sk path { stroke-width: 1.8; opacity: 1; }
+.room figure, .portraits .pf, .film { position: relative; }
+.room figure .sk path, .portraits .pf .sk path, .film .sk path { stroke: var(--chalk); stroke-width: 1.4; opacity: .9; }
 
 /* ---------- Smal skärm ---------- */
 @media (max-width: 860px) {
@@ -559,6 +568,77 @@ body {
   const $ = (s, r = document) => r.querySelector(s);
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
   const lerp = (a, b, t) => a + (b - a) * t;
+
+  /* ================= Handritade linjer ================= */
+  const NS = 'http://www.w3.org/2000/svg';
+  const rngFrom = s => () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const f1 = n => n.toFixed(1);
+  // En handdragen linje: lätt böjd, med små överdrag i ändarna
+  const hLine = (r, x1, y1, x2, y2, j = 1.3) => {
+    const J = a => (r() * 2 - 1) * a;
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+    const over = Math.min(5, len * .02);
+    const sx = x1 - ux * over * r() + J(j * .5), sy = y1 - uy * over * r() + J(j * .5);
+    const ex = x2 + ux * over * r() + J(j * .5), ey = y2 + uy * over * r() + J(j * .5);
+    const bow = Math.min(j * 2, len * .015 + .6);
+    const c = t => [x1 + dx * t + nx * J(bow), y1 + dy * t + ny * J(bow)];
+    const [ax, ay] = c(.3 + J(.08)), [bx, by] = c(.7 + J(.08));
+    return `M${f1(sx)} ${f1(sy)} C${f1(ax)} ${f1(ay)} ${f1(bx)} ${f1(by)} ${f1(ex)} ${f1(ey)}`;
+  };
+  const hLine2 = (r, ...a) => hLine(r, ...a) + ' ' + hLine(r, ...a);
+  // En handdragen ellips: två varv som inte riktigt möts
+  const hEllipse = (r, cx, cy, rx, ry, passes = 2) => {
+    let d = '';
+    for (let p = 0; p < passes; p++) {
+      const a0 = r() * Math.PI * 2, turn = 1.04 + r() * .1, ph = r() * 6, amp = .035 + r() * .03, n = 44;
+      for (let i = 0; i <= n; i++) {
+        const a = a0 + turn * Math.PI * 2 * i / n, k = 1 + amp * Math.sin(a * 2 + ph);
+        d += (i ? 'L' : 'M') + f1(cx + Math.cos(a) * rx * k) + ' ' + f1(cy + Math.sin(a) * ry * k);
+      }
+    }
+    return d;
+  };
+  const SK = [
+    ['.rule', 'hline'], ['.stops', 'top soft'], ['.stops li', 'bottom soft'], ['.stop-status', 'box'],
+    ['.g-close', 'box'], ['.g-sec', 'top soft'], ['.gallery__nav', 'top soft'],
+    ['.room figure', 'frame'], ['.portraits .pf', 'frame'], ['.film', 'frame']
+  ];
+  let skSeed = 101;
+  const drawSk = el => {
+    const w = el.offsetWidth, h = el.offsetHeight;
+    if (!w || !h) return;
+    let svg = el.querySelector(':scope > svg.sk');
+    if (!svg) {
+      svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('aria-hidden', 'true');
+      el.appendChild(svg);
+    }
+    const [kind, soft] = el.__sk.split(' ');
+    svg.setAttribute('class', 'sk' + (soft ? ' soft' : ''));
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    const r = rngFrom(el.__seed);
+    let d = '';
+    if (kind === 'top') d = hLine2(r, 0, .5, w, .5);
+    else if (kind === 'bottom') d = hLine2(r, 0, h - .5, w, h - .5);
+    else if (kind === 'hline') d = hLine2(r, 0, h / 2, w, h / 2, 1.8);
+    else {
+      const i = kind === 'frame' ? 4 : 0;
+      d = [hLine(r, i, i, w - i, i), hLine(r, w - i, i, w - i, h - i), hLine(r, w - i, h - i, i, h - i), hLine(r, i, h - i, i, i)].join(' ');
+      if (kind === 'frame') d += ' ' + hLine(r, i + 2, i + 1, w - i - 3, i + 2);
+    }
+    svg.innerHTML = `<path d="${d}"/>`;
+  };
+  const skRO = 'ResizeObserver' in window ? new ResizeObserver(es => es.forEach(e => drawSk(e.target))) : null;
+  const sketch = (root = document) => {
+    SK.forEach(([sel, kind]) => root.querySelectorAll(sel).forEach(el => {
+      if (el.__sk) { drawSk(el); return; }
+      el.__sk = kind;
+      el.__seed = (skSeed = (skSeed * 48271) % 2147483647);
+      if (skRO) skRO.observe(el); else drawSk(el);
+    }));
+  };
+
 
   /* ================= Innehåll =================
      Lägg till eller ändra platser här. Bilderna är exempelbilder tills riktiga finns.
@@ -778,8 +858,8 @@ body {
     svg += `<g class="pin" data-id="${p.id}" tabindex="0" role="button" aria-label="${p.ort}, ${p.lokal}. Öppna galleri" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" style="--d:${d.toFixed(2)}s">
       <circle class="pin-hit" r="34"/>
       <g class="pin-in">
-        <g clip-path="url(#kvart)"><path class="pin-ring2" d="${ring(15, 15, 1)}"/>
-        <path class="pin-ring" d="${ring(10, 10, 1)}"/></g>
+        <g clip-path="url(#kvart)"><path class="pin-ring2" d="${ring(15, 14, 1, 2, .05)}"/>
+        <path class="pin-ring" d="${ring(10, 9.5, 1, 2, .05)}"/></g>
         <circle class="pin-dot" r="4"/>
       </g>
       <g class="pin-lbl" text-anchor="${anchor}">
@@ -819,6 +899,7 @@ body {
       </button>
     </li>`).join('');
 
+  sketch();
   const drawMap = () => { map.classList.add('is-drawn'); stops.classList.add('is-drawn'); };
   if (reduce || !('IntersectionObserver' in window)) drawMap();
   else {
@@ -849,7 +930,7 @@ body {
   const swap = $('#g-swap');
   let current = null, lastFocus = null;
 
-  const playIcon = `<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M26 21 L45 32 L26 43 Z" fill="currentColor"/></svg>`;
+  const playIcon = `<svg viewBox="0 0 64 64" aria-hidden="true" style="overflow:visible"><path d="${hEllipse(rngFrom(77), 32, 32, 30, 29)}" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="${hLine(rngFrom(78), 26, 20, 26, 44)} ${hLine(rngFrom(79), 26, 20, 46, 32)} ${hLine(rngFrom(80), 46, 32, 26, 44)}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`;
 
   function fill(p) {
     const vs = VISITS.filter(v => v.place === p);
@@ -873,6 +954,7 @@ body {
     $('#g-next').textContent = next.ort + ' →';
     $('#g-next').dataset.id = next.id;
     current = p;
+    sketch(dlg);
   }
 
   function openGallery(id, e) {
