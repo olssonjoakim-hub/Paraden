@@ -462,7 +462,7 @@ body {
 
 /* Kommande nedslag: kort information och en bild */
 .up { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 24px clamp(24px, 4vw, 56px); align-items: start; }
-.up-text { margin: 0; font-size: clamp(1.05rem, 1.4vw, 1.25rem); line-height: 1.55; max-width: 36ch; text-wrap: pretty; }
+.up-text { margin: 0; white-space: pre-line; font-size: clamp(1.05rem, 1.4vw, 1.25rem); line-height: 1.55; max-width: 36ch; text-wrap: pretty; }
 .up-fig { margin: 0; position: relative; aspect-ratio: 4 / 3; max-width: 100%; background: rgba(21, 21, 21, .07); display: grid; place-items: center; }
 .up-fig img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .up-ph { font: 400 12px/1.4 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: rgba(21, 21, 21, .45); text-align: center; padding: 16px; }
@@ -980,7 +980,7 @@ body {
       $('#g-meta').textContent = 'Nedslag ' + uv.map(v => pad(v.n)).join(' & ') + ' · Kommande';
       $('#g-title').textContent = p.lokal;
       $('#g-venue').innerHTML = `${p.ort}<br>${besok.map(b => b.text).join('<br>')}`;
-      $('#g-up-text').textContent = info.info || `PARADEN gör nedslag på ${p.lokal} i ${p.ort} ${besok.map(b => b.text).join(' och ')}. Mer information om tider och program kommer.`;
+      $('#g-up-text').textContent = info.info || `PARADEN gör nedslag på ${p.lokal} i ${p.ort} ${besok.map(b => b.text).join(' och ')}. Mer information om tider och program kommer.\n\nEfter nedslaget kan du komma tillbaka hit och se porträtt av deltagarna, bilder från rummet och film från paraden.`;
       $('#g-up-fig').innerHTML = info.bild
         ? `<img src="${info.bild}" alt="${p.lokal}, ${p.ort}" loading="lazy">`
         : `<span class="up-ph">Bild från ${p.lokal} kommer</span>`;
