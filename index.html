@@ -92,20 +92,19 @@ body::after {
   justify-items: center;
   will-change: transform, opacity;
 }
-.hero__title { margin: 0; width: min(84vw, 1060px); line-height: 0; }
+.hero__title { margin: 0; width: min(94vw, 1380px); line-height: 0; }
 .paint { width: 100%; height: auto; overflow: visible; }
-/* Rubriken är ritad som linjer: varje streck ritas fram för sig */
-.paint path {
+/* Rubriken: bokstäverna visas streck för streck genom en mask */
+.paint text { font-family: var(--display); font-weight: 800; font-size: 1000px; fill: var(--chalk); }
+.paint mask path {
   fill: none;
-  stroke: var(--chalk);
-  stroke-width: 10;
+  stroke: #fff;
+  stroke-width: 250;
   stroke-linecap: butt;
-  stroke-linejoin: miter;
-  stroke-miterlimit: 12;
   stroke-dasharray: 1 1;
   stroke-dashoffset: 1;
 }
-.paint.go path {
+.paint.go mask path {
   stroke-dashoffset: 0;
   transition: stroke-dashoffset var(--t, .9s) cubic-bezier(.6, 0, .2, 1) var(--dl, 0s);
 }
@@ -633,36 +632,41 @@ body::after {
   /* ================= Rubriken ritas fram, streck för streck ================= */
   const paint = $('#paint');
   {
-    // Geometriska bokstäver på en höjd av 100. Streckens mitt ligger 5 in från kanten (strecket är 10 brett).
-    // Linjer förlängs utanför 0–100 och klipps, så att ändarna blir raka mot topp och baslinje.
-    const stem = 'M5 106 V-6';
-    const bowl = 'M5 5 H44 A23 23 0 0 1 44 51 H5';
+    // Bokstäverna är Montserrat 800. Varje bokstav visas genom en mask av breda "pennstreck"
+    // som följer bokstavens form (mätt i fontens enheter: versalhöjd 700, baslinje y=700).
+    const stem = 'M168 760 V-60';
+    const pBowl = 'M168 78 H450 A152 152 0 0 1 450 382 H168';
     const G = {
-      P: [72, [stem, bowl]],
-      A: [78, ['M0.5 106 L39 -8 L77.5 106', 'M14 70 H64']],
-      R: [72, [stem, bowl, 'M36 51 L70 106']],
-      D: [85, [stem, 'M5 5 H35 A45 45 0 0 1 35 95 H5']],
-      E: [60, [stem, 'M0 5 H58', 'M0 50 H52', 'M0 95 H60']],
-      N: [76, [stem, 'M1 -6 L75 106', 'M71 -6 V106']]
+      P: [737, [stem, pBowl]],
+      A: [786, ['M392 -80 L40 760', 'M392 -80 L744 760', 'M150 545 H630']],
+      R: [740, [stem, pBowl, 'M380 382 L690 760']],
+      D: [826, [stem, 'M168 78 H421 A272 272 0 0 1 421 622 H168']],
+      E: [672, [stem, 'M90 78 H680', 'M90 350 H620', 'M90 622 H680']],
+      N: [806, [stem, 'M150 -100 L660 800', 'M638 760 V-60']]
     };
+    const SP = 34;
     let seed = 11;
     const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    let x = 0, out = '';
+    let x = 0, defs = '', glyphs = '', end = 0;
     [...'PARADEN'].forEach((ch, i) => {
-      const [w, paths] = G[ch];
-      paths.forEach((d, j) => {
-        const dl = (.15 + i * .12 + j * .22 + rnd() * .55).toFixed(2);
-        const t = (.75 + rnd() * .6).toFixed(2);
-        out += `<path pathLength="1" d="${d}" transform="translate(${x} 0)" style="--dl:${dl}s;--t:${t}s"/>`;
-      });
-      x += w + 24;
+      const [adv, paths] = G[ch];
+      const strokes = paths.map((d, j) => {
+        const dl = .15 + i * .12 + j * .22 + rnd() * .55, t = .75 + rnd() * .6;
+        end = Math.max(end, dl + t);
+        return `<path pathLength="1" d="${d}" style="--dl:${dl.toFixed(2)}s;--t:${t.toFixed(2)}s"/>`;
+      }).join('');
+      defs += `<mask id="pm${i}" maskUnits="userSpaceOnUse" x="${x - 200}" y="-200" width="1300" height="1100"><g transform="translate(${x} 0)">${strokes}</g></mask>`;
+      glyphs += `<text x="${x}" y="700" mask="url(#pm${i})">${ch}</text>`;
+      x += adv + SP;
     });
-    const total = x - 24;
-    paint.setAttribute('viewBox', `0 0 ${total} 100`);
-    paint.innerHTML = `<defs><clipPath id="capClip"><rect x="-2" y="0" width="${total + 4}" height="100"/></clipPath></defs><g clip-path="url(#capClip)">${out}</g>`;
+    const right = x - SP - 806 + 735;
+    paint.setAttribute('viewBox', `60 -10 ${right - 50} 720`);
+    paint.innerHTML = `<defs>${defs}</defs>${glyphs}`;
+    paint.dataset.end = end.toFixed(2);
   }
   const startPaint = () => {
     paint.classList.add('go');
+    setTimeout(() => paint.querySelectorAll('text').forEach(t => t.removeAttribute('mask')), reduce ? 0 : (parseFloat(paint.dataset.end) + .1) * 1000);
     document.body.classList.add('go-kicker');
   };
   if (reduce) startPaint();
