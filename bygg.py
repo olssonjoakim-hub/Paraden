@@ -11,7 +11,7 @@ import shutil
 
 ROT = pathlib.Path(__file__).parent
 UT = ROT / "docs"
-SIDOR = ["index.html", "handritad.html", "index-tidigare.html", "handritad-tidigare.html"]
+SIDOR = ["index.html", "handritad.html", "index-tidigare.html", "handritad-tidigare.html", "karta-mork.html"]
 
 GRUND = """<style>
 :root { box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
