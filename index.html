@@ -98,9 +98,10 @@ body {
   stroke-dashoffset: 0;
   transition: stroke-dashoffset var(--t, .9s) cubic-bezier(.6, 0, .2, 1) var(--dl, 0s);
 }
-.paint .finals { opacity: 0; }
-.paint.done .finals { opacity: 1; }
-.paint.done .strokes { display: none; }
+/* Rubriken tonar mjukt fram (strecken används inte i den här versionen) */
+.paint .strokes { display: none; }
+.paint .finals { opacity: 0; transform: translateY(1.5%); transition: opacity 2.6s cubic-bezier(.4, 0, .2, 1) .3s, transform 2.6s cubic-bezier(.4, 0, .2, 1) .3s; }
+.paint.go .finals { opacity: 1; transform: none; }
 .hero__kicker {
   margin: 0;
   font: 500 12px/1 var(--mono);
@@ -108,7 +109,7 @@ body {
   text-transform: uppercase;
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity 1s ease 3.6s, transform 1s ease 3.6s;
+  transition: opacity 1s ease 2.2s, transform 1s ease 2.2s;
 }
 .go-kicker .hero__kicker { opacity: .85; transform: none; }
 .hero__cue {
