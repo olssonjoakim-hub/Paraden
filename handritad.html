@@ -441,12 +441,12 @@ body::after {
 .film-ph p { margin: 0; font: 400 13px/1.6 var(--mono); letter-spacing: .06em; color: rgba(242, 241, 237, .85); }
 .room { display: flex; gap: clamp(8px, 1.4vw, 18px); }
 .room figure { margin: 0; overflow: hidden; min-width: 0; }
-.room img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1.2s var(--ease), filter .6s ease; filter: grayscale(.2); }
-.room figure:hover img { transform: scale(1.04); filter: none; }
+.room img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.room figure:hover img { transform: scale(1.04); }
 .portraits { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(8px, 1.4vw, 18px); }
 .portraits figure { margin: 0; display: grid; gap: 8px; }
 .portraits .pf { overflow: hidden; aspect-ratio: 476 / 718; max-width: 100%; background: var(--felt); }
-.portraits img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1.2s var(--ease); }
+.portraits img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .portraits figure:hover img { transform: scale(1.05); }
 .portraits figcaption { font: 400 11px/1.4 var(--mono); letter-spacing: .1em; color: rgba(242, 241, 237, .5); text-transform: uppercase; }
 .gallery__nav { display: flex; justify-content: space-between; gap: 12px; padding-top: 20px; position: relative; }
@@ -462,6 +462,46 @@ body::after {
 }
 .gallery__nav button:hover, .gallery__nav button:focus-visible { color: var(--chalk); text-decoration: underline; text-underline-offset: 6px; }
 .gallery__nav button:last-child { text-align: right; }
+
+/* Bilder i galleriet: svartvita tills man hovrar, klick öppnar dem större */
+.room img, .portraits img { filter: grayscale(1) contrast(1.04); transition: filter .9s ease, transform 1.2s var(--ease); }
+.room figure:hover img, .portraits figure:hover img, .room figure:focus-visible img, .portraits figure:focus-visible img { filter: none; }
+.room figure, .portraits figure { cursor: zoom-in; }
+.room figure:focus-visible, .portraits figure:focus-visible { outline: 2px solid var(--chalk); outline-offset: 3px; }
+.lb {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  background: rgba(12, 12, 12, .96);
+  color: var(--chalk);
+  padding: calc(16px + env(safe-area-inset-top, 0px)) var(--gutter-r) calc(16px + env(safe-area-inset-bottom, 0px)) var(--gutter-l);
+  opacity: 0;
+  transition: opacity .35s ease;
+}
+.lb.on { opacity: 1; }
+.lb[hidden] { display: none; }
+.lb-top, .lb-bottom { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.lb-count { font: 400 12px/1 var(--mono); letter-spacing: .14em; color: rgba(242, 241, 237, .6); }
+.lb button {
+  all: unset;
+  position: relative;
+  cursor: pointer;
+  font: 500 12px/1 var(--mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--chalk);
+  padding: 12px 14px;
+}
+
+.lb button:hover, .lb button:focus-visible { background: var(--chalk); color: var(--night); }
+#lb-prev, #lb-next { font-size: 22px; letter-spacing: 0; padding: 10px 16px; }
+.lb-stage { min-height: 0; height: 100%; display: grid; place-items: center; }
+.lb-stage img { max-width: 100%; max-height: 100%; object-fit: contain; transform: scale(.97); transition: transform .5s var(--ease); }
+.lb.on .lb-stage img { transform: none; }
+.lb-cap { margin: 0; flex: 1; text-align: center; font: 400 13px/1.5 var(--mono); color: rgba(242, 241, 237, .8); }
 
 /* ---------- Smal skärm ---------- */
 @media (max-width: 860px) {
@@ -612,6 +652,11 @@ body { font-synthesis: none; }
       <button type="button" id="g-next"></button>
     </nav>
   </div>
+  <div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Bild i större format">
+    <div class="lb-top"><span class="lb-count" id="lb-count"></span><button class="lb-close" id="lb-close" type="button">Stäng ✕</button></div>
+    <div class="lb-stage"><img id="lb-img" alt=""></div>
+    <div class="lb-bottom"><button type="button" id="lb-prev" aria-label="Föregående bild">←</button><p class="lb-cap" id="lb-cap"></p><button type="button" id="lb-next" aria-label="Nästa bild">→</button></div>
+  </div>
 </dialog>
 
 <script>
@@ -653,7 +698,7 @@ body { font-synthesis: none; }
   };
   const SK = [
     ['.rule', 'hline'], ['.stops', 'top soft'], ['.stops li', 'bottom soft'], ['.stop-status', 'box'],
-    ['.g-close', 'box'], ['.g-sec', 'top soft'], ['.gallery__nav', 'top soft'],
+    ['.g-close', 'box'], ['.lb-close', 'box'], ['.g-sec', 'top soft'], ['.gallery__nav', 'top soft'],
     ['.room figure', 'frame'], ['.portraits .pf', 'frame'], ['.film', 'frame']
   ];
   let skSeed = 101;
@@ -951,10 +996,10 @@ body { font-synthesis: none; }
       ? `<video src="${p.video}" controls playsinline preload="metadata" poster="${B}rum-mitten.jpg"></video>`
       : `<img src="${B}rum-mitten.jpg" alt=""><div class="film-ph">${playIcon}<p>Filmen från paraden i ${p.ort} visas här.</p></div>`;
     $('#g-room').innerHTML = p.rum.map(([src, ratio, alt]) =>
-      `<figure style="flex:${ratio};aspect-ratio:${ratio}"><img src="${src}" alt="${alt}" loading="lazy"></figure>`).join('');
+      `<figure style="flex:${ratio};aspect-ratio:${ratio}" tabindex="0" role="button" aria-label="Visa större: ${alt}"><img src="${src}" alt="${alt}" loading="lazy"></figure>`).join('');
     $('#g-portraits').innerHTML = p.portratt.map((n, i) => {
       const [src, alt] = P(n);
-      return `<figure><div class="pf"><img src="${src}" alt="${alt}" loading="lazy"></div><figcaption>Deltagare ${pad(i + 1)}</figcaption></figure>`;
+      return `<figure tabindex="0" role="button" aria-label="Visa större: deltagare ${pad(i + 1)}"><div class="pf"><img src="${src}" alt="${alt}" loading="lazy"></div><figcaption>Deltagare ${pad(i + 1)}</figcaption></figure>`;
     }).join('');
     const idx = ORDER.indexOf(p);
     const prev = ORDER[(idx - 1 + ORDER.length) % ORDER.length], next = ORDER[(idx + 1) % ORDER.length];
@@ -1010,8 +1055,54 @@ body { font-synthesis: none; }
   $('#g-close').addEventListener('click', closeGallery);
   $('#g-prev').addEventListener('click', e => go(e.currentTarget.dataset.id));
   $('#g-next').addEventListener('click', e => go(e.currentTarget.dataset.id));
-  dlg.addEventListener('cancel', e => { e.preventDefault(); closeGallery(); });
+  /* Större bild */
+  const lb = $('#lb'), lbImg = $('#lb-img');
+  let lbList = [], lbI = 0, lbReturn = null;
+  const lbShow = i => {
+    lbI = (i + lbList.length) % lbList.length;
+    const it = lbList[lbI];
+    lbImg.src = it.src; lbImg.alt = it.alt;
+    $('#lb-cap').textContent = it.cap;
+    $('#lb-count').textContent = `${lbI + 1} / ${lbList.length}`;
+  };
+  const lbFigs = () => [...dlg.querySelectorAll('.room figure, .portraits figure')];
+  const lbOpen = fig => {
+    const figs = lbFigs();
+    lbList = figs.map(f => {
+      const im = f.querySelector('img'), cap = f.querySelector('figcaption');
+      return { src: im.currentSrc || im.src, alt: im.alt, cap: cap ? cap.textContent : im.alt };
+    });
+    lbReturn = fig;
+    lbShow(figs.indexOf(fig));
+    lb.hidden = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => lb.classList.add('on')));
+    $('#lb-close').focus({ preventScroll: true });
+  };
+  const lbClose = () => {
+    lb.classList.remove('on');
+    setTimeout(() => { lb.hidden = true; }, reduce ? 0 : 350);
+    if (lbReturn) lbReturn.focus({ preventScroll: true });
+  };
+  dlg.addEventListener('click', e => {
+    const f = e.target.closest('.room figure, .portraits figure');
+    if (f) lbOpen(f);
+  });
   dlg.addEventListener('keydown', e => {
+    const f = e.target.closest && e.target.closest('.room figure, .portraits figure');
+    if (f && lb.hidden && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); lbOpen(f); }
+  });
+  $('#lb-close').addEventListener('click', lbClose);
+  $('#lb-prev').addEventListener('click', () => lbShow(lbI - 1));
+  $('#lb-next').addEventListener('click', () => lbShow(lbI + 1));
+  lb.addEventListener('click', e => { if (e.target === lb || e.target.classList.contains('lb-stage')) lbClose(); });
+
+  dlg.addEventListener('cancel', e => { e.preventDefault(); if (!lb.hidden) lbClose(); else closeGallery(); });
+  dlg.addEventListener('keydown', e => {
+    if (!lb.hidden) {
+      if (e.key === 'ArrowRight') lbShow(lbI + 1);
+      if (e.key === 'ArrowLeft') lbShow(lbI - 1);
+      return;
+    }
     if (e.key === 'ArrowRight') go($('#g-next').dataset.id);
     if (e.key === 'ArrowLeft') go($('#g-prev').dataset.id);
   });
