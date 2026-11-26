@@ -818,7 +818,7 @@ body {
         <span class="stop-town">${v.place.ort}</span>
         <span class="stop-venue">${v.place.lokal}</span>
         <span class="stop-date">${v.text}</span>
-        <span class="stop-status${v.status === 'Kommande' ? ' is-future' : ''}">${v.status}</span>
+        ${v.status === 'Genomförd' ? '' : `<span class="stop-status${v.status === 'Kommande' ? ' is-future' : ''}">${v.status}</span>`}
         <span class="stop-arrow" aria-hidden="true">→</span>
       </button>
     </li>`).join('');
