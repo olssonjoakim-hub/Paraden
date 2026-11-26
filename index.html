@@ -440,12 +440,10 @@ body::after {
 .room { display: flex; gap: clamp(8px, 1.4vw, 18px); }
 .room figure { margin: 0; overflow: hidden; min-width: 0; }
 .room img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.room figure:hover img { transform: scale(1.04); }
 .portraits { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(8px, 1.4vw, 18px); }
 .portraits figure { margin: 0; display: grid; gap: 8px; }
 .portraits .pf { overflow: hidden; aspect-ratio: 476 / 718; max-width: 100%; background: var(--felt); }
 .portraits img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.portraits figure:hover img { transform: scale(1.05); }
 .portraits figcaption { font: 400 11px/1.4 var(--mono); letter-spacing: .1em; color: rgba(242, 241, 237, .5); text-transform: uppercase; }
 .gallery__nav { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid rgba(242, 241, 237, .2); padding-top: 20px; }
 .gallery__nav button {
@@ -462,44 +460,22 @@ body::after {
 .gallery__nav button:last-child { text-align: right; }
 
 /* Bilder i galleriet: svartvita tills man hovrar, klick öppnar dem större */
-.room img, .portraits img { filter: grayscale(1) contrast(1.04); transition: filter .9s ease, transform 1.2s var(--ease); }
+.room img, .portraits img { filter: grayscale(1) contrast(1.04); transition: filter .9s ease; }
 .room figure:hover img, .portraits figure:hover img, .room figure:focus-visible img, .portraits figure:focus-visible img { filter: none; }
 .room figure, .portraits figure { cursor: zoom-in; }
 .room figure:focus-visible, .portraits figure:focus-visible { outline: 2px solid var(--chalk); outline-offset: 3px; }
-.lb {
+.zoom { position: fixed; inset: 0; z-index: 5; cursor: zoom-out; background: rgba(12, 12, 12, 0); transition: background .5s ease; outline: none; }
+.zoom.on { background: rgba(12, 12, 12, .4); }
+.zoom[hidden] { display: none; }
+.zoom img {
   position: fixed;
-  inset: 0;
-  z-index: 5;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 14px;
-  background: rgba(12, 12, 12, .96);
-  color: var(--chalk);
-  padding: calc(16px + env(safe-area-inset-top, 0px)) var(--gutter-r) calc(16px + env(safe-area-inset-bottom, 0px)) var(--gutter-l);
-  opacity: 0;
-  transition: opacity .35s ease;
+  max-width: none;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.04);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  transition: left .55s var(--ease), top .55s var(--ease), width .55s var(--ease), height .55s var(--ease), filter .6s ease, box-shadow .55s ease;
 }
-.lb.on { opacity: 1; }
-.lb[hidden] { display: none; }
-.lb-top, .lb-bottom { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-.lb-count { font: 400 12px/1 var(--mono); letter-spacing: .14em; color: rgba(242, 241, 237, .6); }
-.lb button {
-  all: unset;
-  position: relative;
-  cursor: pointer;
-  font: 500 12px/1 var(--mono);
-  letter-spacing: .2em;
-  text-transform: uppercase;
-  color: var(--chalk);
-  padding: 12px 14px;
-}
-.lb .lb-close { border: 1px solid rgba(242, 241, 237, .4); }
-.lb button:hover, .lb button:focus-visible { background: var(--chalk); color: var(--night); }
-#lb-prev, #lb-next { font-size: 22px; letter-spacing: 0; padding: 10px 16px; }
-.lb-stage { min-height: 0; height: 100%; display: grid; place-items: center; }
-.lb-stage img { max-width: 100%; max-height: 100%; object-fit: contain; transform: scale(.97); transition: transform .5s var(--ease); }
-.lb.on .lb-stage img { transform: none; }
-.lb-cap { margin: 0; flex: 1; text-align: center; font: 400 13px/1.5 var(--mono); color: rgba(242, 241, 237, .8); }
+.zoom.on img { filter: none; box-shadow: 0 28px 70px rgba(0, 0, 0, .55); }
 
 /* ---------- Smal skärm ---------- */
 @media (max-width: 860px) {
@@ -621,11 +597,7 @@ body::after {
       <button type="button" id="g-next"></button>
     </nav>
   </div>
-  <div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Bild i större format">
-    <div class="lb-top"><span class="lb-count" id="lb-count"></span><button class="lb-close" id="lb-close" type="button">Stäng ✕</button></div>
-    <div class="lb-stage"><img id="lb-img" alt=""></div>
-    <div class="lb-bottom"><button type="button" id="lb-prev" aria-label="Föregående bild">←</button><p class="lb-cap" id="lb-cap"></p><button type="button" id="lb-next" aria-label="Nästa bild">→</button></div>
-  </div>
+  <div class="zoom" id="zoom" hidden tabindex="-1" aria-label="Förstorad bild. Klicka eller tryck Esc för att stänga."><img alt=""></div>
 </dialog>
 
 <script>
@@ -951,54 +923,61 @@ body::after {
   $('#g-close').addEventListener('click', closeGallery);
   $('#g-prev').addEventListener('click', e => go(e.currentTarget.dataset.id));
   $('#g-next').addEventListener('click', e => go(e.currentTarget.dataset.id));
-  /* Större bild */
-  const lb = $('#lb'), lbImg = $('#lb-img');
-  let lbList = [], lbI = 0, lbReturn = null;
-  const lbShow = i => {
-    lbI = (i + lbList.length) % lbList.length;
-    const it = lbList[lbI];
-    lbImg.src = it.src; lbImg.alt = it.alt;
-    $('#lb-cap').textContent = it.cap;
-    $('#lb-count').textContent = `${lbI + 1} / ${lbList.length}`;
+  /* Förstoring: bilden växer ut från sin plats, klick var som helst stänger */
+  const zoom = $('#zoom'), zImg = zoom.querySelector('img');
+  let zFig = null, zBusy = false;
+  const place = r => Object.assign(zImg.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+  const zoomOpen = fig => {
+    if (zFig || zBusy) return;
+    const im = fig.querySelector('img'), r = im.getBoundingClientRect();
+    const nw = im.naturalWidth || r.width, nh = im.naturalHeight || r.height;
+    const vw = innerWidth, vh = innerHeight, m = 16;
+    const s = Math.min(vw * .8 / nw, vh * .8 / nh, 1.9 * Math.max(r.width / nw, r.height / nh));
+    const tw = nw * s, th = nh * s;
+    const cx = Math.min(Math.max(r.left + r.width / 2, m + tw / 2), vw - m - tw / 2);
+    const cy = Math.min(Math.max(r.top + r.height / 2, m + th / 2), vh - m - th / 2);
+    zImg.src = im.currentSrc || im.src;
+    zImg.alt = im.alt;
+    place(r);
+    zFig = fig;
+    fig.style.visibility = 'hidden';
+    zoom.hidden = false;
+    zoom.focus({ preventScroll: true });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      zoom.classList.add('on');
+      place({ left: cx - tw / 2, top: cy - th / 2, width: tw, height: th });
+    }));
   };
-  const lbFigs = () => [...dlg.querySelectorAll('.room figure, .portraits figure')];
-  const lbOpen = fig => {
-    const figs = lbFigs();
-    lbList = figs.map(f => {
-      const im = f.querySelector('img'), cap = f.querySelector('figcaption');
-      return { src: im.currentSrc || im.src, alt: im.alt, cap: cap ? cap.textContent : im.alt };
-    });
-    lbReturn = fig;
-    lbShow(figs.indexOf(fig));
-    lb.hidden = false;
-    requestAnimationFrame(() => requestAnimationFrame(() => lb.classList.add('on')));
-    $('#lb-close').focus({ preventScroll: true });
-  };
-  const lbClose = () => {
-    lb.classList.remove('on');
-    setTimeout(() => { lb.hidden = true; }, reduce ? 0 : 350);
-    if (lbReturn) lbReturn.focus({ preventScroll: true });
+  const zoomClose = () => {
+    if (!zFig || zBusy) return;
+    zBusy = true;
+    const fig = zFig;
+    zoom.classList.remove('on');
+    place(fig.querySelector('img').getBoundingClientRect());
+    setTimeout(() => {
+      zoom.hidden = true;
+      fig.style.visibility = '';
+      fig.focus({ preventScroll: true });
+      zFig = null; zBusy = false;
+    }, reduce ? 0 : 560);
   };
   dlg.addEventListener('click', e => {
+    if (zFig) return;
     const f = e.target.closest('.room figure, .portraits figure');
-    if (f) lbOpen(f);
+    if (f) zoomOpen(f);
   });
+  zoom.addEventListener('click', zoomClose);
+  zoom.addEventListener('wheel', zoomClose, { passive: true });
+  zoom.addEventListener('touchmove', zoomClose, { passive: true });
   dlg.addEventListener('keydown', e => {
+    if (zFig) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); zoomClose(); } return; }
     const f = e.target.closest && e.target.closest('.room figure, .portraits figure');
-    if (f && lb.hidden && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); lbOpen(f); }
+    if (f && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); zoomOpen(f); }
   });
-  $('#lb-close').addEventListener('click', lbClose);
-  $('#lb-prev').addEventListener('click', () => lbShow(lbI - 1));
-  $('#lb-next').addEventListener('click', () => lbShow(lbI + 1));
-  lb.addEventListener('click', e => { if (e.target === lb || e.target.classList.contains('lb-stage')) lbClose(); });
 
-  dlg.addEventListener('cancel', e => { e.preventDefault(); if (!lb.hidden) lbClose(); else closeGallery(); });
+  dlg.addEventListener('cancel', e => { e.preventDefault(); if (zFig) zoomClose(); else closeGallery(); });
   dlg.addEventListener('keydown', e => {
-    if (!lb.hidden) {
-      if (e.key === 'ArrowRight') lbShow(lbI + 1);
-      if (e.key === 'ArrowLeft') lbShow(lbI - 1);
-      return;
-    }
+    if (zFig) return;
     if (e.key === 'ArrowRight') go($('#g-next').dataset.id);
     if (e.key === 'ArrowLeft') go($('#g-prev').dataset.id);
   });
