@@ -95,18 +95,21 @@ body::after {
 .paint { width: 100%; height: auto; overflow: visible; }
 /* Rubriken: bokstäverna visas streck för streck genom en mask */
 .paint text { font-family: var(--display); font-weight: 800; font-size: 1000px; fill: var(--chalk); }
-.paint mask path {
+.paint .st {
   fill: none;
-  stroke: #fff;
+  stroke: var(--chalk);
   stroke-width: 250;
   stroke-linecap: butt;
   stroke-dasharray: 1 1;
   stroke-dashoffset: 1;
 }
-.paint.go mask path {
+.paint.go .st {
   stroke-dashoffset: 0;
   transition: stroke-dashoffset var(--t, .9s) cubic-bezier(.6, 0, .2, 1) var(--dl, 0s);
 }
+.paint .finals { opacity: 0; }
+.paint.done .finals { opacity: 1; }
+.paint.done .strokes { display: none; }
 .hero__kicker {
   margin: 0;
   font: 500 12px/1 var(--mono);
@@ -295,9 +298,8 @@ body::after {
 #map .seg-a { stroke-width: 1.9; opacity: .9; }
 #map .seg-b { stroke-width: .9; opacity: .45; }
 #map .seg.future { stroke-dasharray: 7 8; }
-#map .mk { fill: none; stroke: #fff; stroke-width: 14; stroke-linecap: round; stroke-dasharray: 1 1; stroke-dashoffset: 0; }
-.anim #map .mk { stroke-dashoffset: 1; }
-.anim #map.is-drawn .mk { stroke-dashoffset: 0; transition: stroke-dashoffset .85s cubic-bezier(.5, 0, .3, 1) var(--d); }
+.anim #map .seg { stroke-dashoffset: var(--off, 0); }
+.anim #map.is-drawn .seg { stroke-dashoffset: 0; transition: stroke-dashoffset .85s cubic-bezier(.5, 0, .3, 1) var(--d); }
 .anim #map .fade { opacity: 0; }
 .anim #map.is-drawn .fade { opacity: 1; transition: opacity 1.2s ease var(--d, 0s); }
 #map .pin { cursor: pointer; outline: none; }
@@ -688,26 +690,27 @@ body::after {
     const SP = 34;
     let seed = 11;
     const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    let x = 0, defs = '', glyphs = '', end = 0;
+    let x = 0, defs = '', strokesG = '', glyphs = '', end = 0;
     [...'PARADEN'].forEach((ch, i) => {
       const [adv, paths] = G[ch];
       const strokes = paths.map(([d, zone], j) => {
         const dl = .15 + i * .12 + j * .22 + rnd() * .55, t = .75 + rnd() * .6;
         end = Math.max(end, dl + t);
-        return `<path pathLength="1" d="${d}" clip-path="url(#z-${zone})" style="--dl:${dl.toFixed(2)}s;--t:${t.toFixed(2)}s"/>`;
+        return `<g clip-path="url(#z-${zone})"><path class="st" pathLength="1" d="${d}" clip-path="url(#gl${i})" style="--dl:${dl.toFixed(2)}s;--t:${t.toFixed(2)}s"/></g>`;
       }).join('');
-      defs += `<mask id="pm${i}" maskUnits="userSpaceOnUse" x="${x - 200}" y="-200" width="1300" height="1100"><g transform="translate(${x} 0)">${strokes}</g></mask>`;
-      glyphs += `<text x="${x}" y="700" mask="url(#pm${i})">${ch}</text>`;
+      defs += `<clipPath id="gl${i}" clipPathUnits="userSpaceOnUse"><text x="0" y="700">${ch}</text></clipPath>`;
+      strokesG += `<g transform="translate(${x} 0)">${strokes}</g>`;
+      glyphs += `<text x="${x}" y="700">${ch}</text>`;
       x += adv + SP;
     });
     const right = x - SP - 806 + 735;
     paint.setAttribute('viewBox', `60 -10 ${right - 50} 720`);
-    paint.innerHTML = `<defs>${clipDefs}${defs}</defs>${glyphs}`;
+    paint.innerHTML = `<defs>${clipDefs}${defs}</defs><g class="strokes">${strokesG}</g><g class="finals">${glyphs}</g>`;
     paint.dataset.end = end.toFixed(2);
   }
   const startPaint = () => {
     paint.classList.add('go');
-    setTimeout(() => paint.querySelectorAll('text').forEach(t => t.removeAttribute('mask')), reduce ? 0 : (parseFloat(paint.dataset.end) + .1) * 1000);
+    setTimeout(() => paint.classList.add('done'), reduce ? 0 : (parseFloat(paint.dataset.end) + .1) * 1000);
     document.body.classList.add('go-kicker');
   };
   if (reduce) startPaint();
@@ -776,10 +779,9 @@ body::after {
     const d = `M${x1.toFixed(1)} ${y1.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`;
     const fut = VISITS[i].status === 'Kommande' ? ' future' : '';
     const delay = T0 + (i - 1) * STEP;
-    masks += `<mask id="mk${i}" maskUnits="userSpaceOnUse" x="0" y="0" width="820" height="930"><path class="mk" pathLength="1" style="--d:${delay}s" d="${d}"/></mask>`;
-    segs += `<g mask="url(#mk${i})"><path class="seg seg-a${fut}" d="${d}" filter="url(#graphite)"/><path class="seg seg-b${fut}" d="${d}" transform="translate(.9 .7)" filter="url(#pencil)"/></g>`;
+    segs += `<g style="--d:${delay}s"><path class="seg seg-a${fut}" d="${d}" filter="url(#graphite)"/><path class="seg seg-b${fut}" d="${d}" transform="translate(.9 .7)" filter="url(#pencil)"/></g>`;
   }
-  svg += `<defs>${masks}</defs>${segs}`;
+  svg += segs;
 
   // Platser
   PLACES.forEach(p => {
@@ -809,6 +811,18 @@ body::after {
     </g>`;
   });
   map.innerHTML = svg;
+  // Varje linje ritas fram genom att streckmönstret flyttas; streckade (kommande) linjer behåller sina streck.
+  map.querySelectorAll('.seg').forEach(el => {
+    const L = el.getTotalLength();
+    if (el.classList.contains('future')) {
+      const n = Math.ceil(L / 15);
+      el.style.strokeDasharray = '7 8 '.repeat(n - 1) + `7 ${Math.ceil(L) + 20}`;
+      el.style.setProperty('--off', n * 15 - 8);
+    } else {
+      el.style.strokeDasharray = `${Math.ceil(L) + 2} ${Math.ceil(L) + 20}`;
+      el.style.setProperty('--off', Math.ceil(L) + 2);
+    }
+  });
 
   // Lista
   const stops = $('#stops');
