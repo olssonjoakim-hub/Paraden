@@ -860,8 +860,9 @@ body {
   function fill(p) {
     const vs = VISITS.filter(v => v.place === p);
     $('#g-meta').textContent = 'Nedslag ' + vs.map(v => pad(v.n)).join(' & ') + ' · ' + vs.map(v => v.status).filter((s, i, a) => a.indexOf(s) === i).join(' / ');
-    $('#g-title').textContent = p.ort;
-    $('#g-venue').innerHTML = `${p.lokal}<br>${p.besok.map(b => b.text).join('<br>')}`;
+    // I den här versionen är lokalen huvudrubrik och orten står under, med datumen.
+    $('#g-title').textContent = p.lokal;
+    $('#g-venue').innerHTML = `${p.ort}<br>${p.besok.map(b => b.text).join('<br>')}`;
     $('#g-film').innerHTML = p.video
       ? `<video src="${p.video}" controls playsinline preload="metadata" poster="${B}rum-mitten.jpg"></video>`
       : `<img src="${B}rum-mitten.jpg" alt=""><div class="film-ph">${playIcon}<p>Filmen från paraden i ${p.ort} visas här.</p></div>`;
