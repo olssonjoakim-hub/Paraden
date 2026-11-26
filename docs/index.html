@@ -16,7 +16,7 @@ img { max-width: 100%; }
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Montserrat:wght@400;500;700;800;900&display=swap">
 <style>
-/* Layout: fullbreda band som växlar mellan natt (bild, procession, galleri) och papper (text, karta); innehåll i en wrap på max 1240px. */
+/* Layout: fullbreda band som växlar mellan natt (bild, galleri) och papper (text, karta); innehåll i en wrap på max 1240px. */
 :root {
   --paper: #e6e5e1;
   --paper-2: #d8d7d2;
@@ -209,59 +209,6 @@ body {
 }
 .mani-end span { display: inline-block; color: #d4d3ce; transition: color .8s ease, transform .8s var(--ease); transform: translateY(.12em); }
 .mani-end.lit span { color: var(--ink); transform: none; }
-
-/* ---------- Procession ---------- */
-.procession {
-  position: relative;
-  overflow: hidden;
-  background: var(--felt);
-  color: var(--chalk);
-  padding-block: clamp(56px, 10vh, 110px) clamp(40px, 7vh, 80px);
-}
-.procession__ghost {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  translate: 0 -50%;
-  white-space: nowrap;
-  pointer-events: none;
-  font: 900 clamp(4rem, 13vw, 12rem)/1 var(--display);
-  text-transform: uppercase;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(242, 241, 237, .12);
-  will-change: transform;
-}
-.procession__track {
-  position: relative;
-  display: flex;
-  gap: clamp(8px, 2vw, 32px);
-  width: max-content;
-  will-change: transform;
-}
-.fig {
-  margin: 0;
-  height: clamp(300px, 62vh, 600px);
-  aspect-ratio: 476 / 718;
-  max-width: none;
-  will-change: transform;
-}
-.fig img {
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  object-fit: cover;
-}
-.procession__foot {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 12px 32px;
-  margin-top: 28px;
-}
-.procession__foot p { margin: 0; }
-.procession__foot .eyebrow { color: rgba(242, 241, 237, .55); }
-.procession__line { font-weight: 500; font-size: 15px; max-width: 46ch; }
 
 /* ---------- Karta ---------- */
 .route {
@@ -536,14 +483,6 @@ body {
     </div>
   </section>
 
-  <section class="procession" id="procession" aria-label="Deltagare i sina paraddräkter">
-    <div class="procession__ghost" id="pghost" aria-hidden="true">Paraden söker upp · Paraden leker · Paraden gör nedslag · Paraden söker upp ·</div>
-    <div class="procession__track" id="track"></div>
-    <div class="wrap procession__foot">
-      <p class="eyebrow">Paraden i rörelse</p>
-      <p class="procession__line">Deltagarna provar skulpturerna, tar dem på sig och går ut på parad.</p>
-    </div>
-  </section>
 
   <section class="route" id="platser" aria-labelledby="platser-rubrik">
     <div class="wrap">
@@ -720,13 +659,6 @@ body {
     Promise.race([fontReady, new Promise(r => setTimeout(r, 1400))]).then(() => requestAnimationFrame(() => requestAnimationFrame(startPaint)));
   }
 
-  /* ================= Procession ================= */
-  const track = $('#track');
-  const figOrder = [1, 2, 3, 4, 2, 4, 1, 3];
-  track.innerHTML = figOrder.map((n, i) =>
-    `<figure class="fig" data-i="${i}"><img src="${B}procession-${n}.webp" alt="${i < 4 ? 'Deltagare i paraddräkt av filt' : ''}" loading="lazy" decoding="async"></figure>`
-  ).join('');
-  const figs = [...track.children];
 
   /* ================= Karta ================= */
   const X = lon => (lon - 17) * 350;          // ~cos(60°) gånger skalan
@@ -1040,8 +972,8 @@ body {
   }
 
   const heroImg = $('.hero__media img'), heroInner = $('.hero__inner');
-  const ghost = $('#ghost'), pghost = $('#pghost');
-  const manifest = $('#om'), proc = $('#procession');
+  const ghost = $('#ghost');
+  const manifest = $('#om');
   const sentences = [...document.querySelectorAll('#mani span')];
   const maniEnd = $('#mani-end');
   const speedEls = [...document.querySelectorAll('[data-speed]')];
@@ -1060,8 +992,8 @@ body {
     return clamp((vh - r.top) / (vh + r.height));
   }
 
-  let trackW = 0, ghostW = 0;
-  const measureTrack = () => { trackW = track.scrollWidth; ghostW = ghost.scrollWidth; request(); };
+  let ghostW = 0;
+  const measureTrack = () => { ghostW = ghost.scrollWidth; request(); };
   measureTrack();
   addEventListener('resize', measureTrack);
   addEventListener('load', measureTrack);
@@ -1075,8 +1007,8 @@ body {
     const still = Math.abs(cmx - mx) < .001 && Math.abs(cmy - my) < .001;
 
     // --- Läs ---
-    const rm = manifest.getBoundingClientRect(), rp = proc.getBoundingClientRect();
-    const manVis = rm.bottom > 0 && rm.top < vh, procVis = rp.bottom > 0 && rp.top < vh;
+    const rm = manifest.getBoundingClientRect();
+    const manVis = rm.bottom > 0 && rm.top < vh;
     const lit = manVis ? sentences.map(s => { const r = s.getBoundingClientRect(); return r.top + r.height / 2 < vh * .7; }) : null;
     let endLit = null;
     if (manVis) { const re = maniEnd.getBoundingClientRect(); endLit = re.top + re.height / 2 < vh * .8; }
@@ -1096,15 +1028,6 @@ body {
       ghost.style.transform = `translate3d(${lerp(vw * .25, Math.min(vw * .25, vw * .75 - ghostW), pm)}px, ${lerp(0, 18, pm)}vh, 0)`;
       sentences.forEach((s, i) => s.classList.toggle('lit', lit[i]));
       maniEnd.classList.toggle('lit', endLit);
-    }
-    if (procVis) {
-      const pp = clamp((vh - rp.top) / (vh + rp.height));
-      track.style.transform = `translate3d(${lerp(vw * .7, vw * .3 - trackW, pp)}px, 0, 0)`;
-      pghost.style.transform = `translate3d(${lerp(-50, 0, pp)}%, 0, 0)`;
-      figs.forEach((f, i) => {
-        const ph = pp * 34 + i * 1.7;
-        f.style.transform = `translate3d(0, ${Math.sin(ph) * 9 + (i % 2) * 14}px, 0) rotate(${Math.sin(ph + .6) * 1.4}deg)`;
-      });
     }
     speedEls.forEach((el, i) => {
       if (speeds[i] === null) return;
