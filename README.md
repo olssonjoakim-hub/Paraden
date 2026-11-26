@@ -31,5 +31,5 @@ Skriptet lägger till sidans skal och kopierar bilderna. Kör det efter varje ä
 
 Adresser när GitHub Pages är påslaget (källa: grenen med koden, mappen `/docs`):
 
-- https://olssonjoakim-hub.github.io/paraden/
-- https://olssonjoakim-hub.github.io/paraden/handritad.html
+- https://olssonjoakim-hub.github.io/Paraden/
+- https://olssonjoakim-hub.github.io/Paraden/handritad.html

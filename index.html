@@ -520,7 +520,7 @@ body::after {
 
 <main>
   <section class="manifest" id="om" aria-labelledby="om-rubrik">
-    <div class="ghost" id="ghost" aria-hidden="true"><img src="bilder/figur-1.webp" alt="" loading="lazy" decoding="async"><img src="bilder/figur-2.webp" alt="" loading="lazy" decoding="async"><img src="bilder/figur-3.webp" alt="" loading="lazy" decoding="async"><img src="bilder/figur-4.webp" alt="" loading="lazy" decoding="async"><img src="bilder/figur-5.webp" alt="" loading="lazy" decoding="async"></div>
+    <div class="ghost" id="ghost" aria-hidden="true"><img src="bilder/figur-1.webp" alt="" decoding="async"><img src="bilder/figur-2.webp" alt="" decoding="async"><img src="bilder/figur-3.webp" alt="" decoding="async"><img src="bilder/figur-4.webp" alt="" decoding="async"><img src="bilder/figur-5.webp" alt="" decoding="async"></div>
     <div class="wrap manifest__grid">
       <div class="manifest__intro" data-speed=".06">
         <p class="eyebrow" id="om-rubrik">Om verket</p>
@@ -1009,11 +1009,12 @@ body::after {
     return clamp((vh - r.top) / (vh + r.height));
   }
 
-  let trackW = 0;
-  const measureTrack = () => { trackW = track.scrollWidth; };
+  let trackW = 0, ghostW = 0;
+  const measureTrack = () => { trackW = track.scrollWidth; ghostW = ghost.scrollWidth; request(); };
   measureTrack();
   addEventListener('resize', measureTrack);
   addEventListener('load', measureTrack);
+  ghost.querySelectorAll('img').forEach(im => im.complete || im.addEventListener('load', measureTrack));
 
   // Läs först alla mått, skriv sedan alla förändringar, så att webbläsaren bara räknar om layouten en gång per bildruta.
   function frame() {
@@ -1041,7 +1042,7 @@ body::after {
     }
     if (manVis) {
       const pm = clamp((vh - rm.top) / (vh + rm.height));
-      ghost.style.transform = `translate3d(${lerp(15, -75, pm)}vw, ${lerp(0, 18, pm)}vh, 0)`;
+      ghost.style.transform = `translate3d(${lerp(vw * .25, Math.min(vw * .25, vw * .75 - ghostW), pm)}px, ${lerp(0, 18, pm)}vh, 0)`;
       sentences.forEach((s, i) => s.classList.toggle('lit', lit[i]));
       maniEnd.classList.toggle('lit', endLit);
     }
