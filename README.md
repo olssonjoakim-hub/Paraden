@@ -29,16 +29,12 @@ python3 bygg.py
 
 Skriptet lägger till sidans skal och kopierar bilderna. Kör det efter varje ändring och committa `docs/`.
 
-Adresser när GitHub Pages är påslaget (källa: grenen med koden, mappen `/docs`):
+Huvudversioner (bara dessa två utvecklas vidare):
 
-- https://olssonjoakim-hub.github.io/Paraden/
-- https://olssonjoakim-hub.github.io/Paraden/handritad.html
+- https://olssonjoakim-hub.github.io/Paraden/ (mörk karta)
+- https://olssonjoakim-hub.github.io/Paraden/handritad.html (samma sida, handskrivet typsnitt)
 
-Huvudversionen med mörk karta:
+`handritad.html` ska vara identisk med `index.html` utom typsnitten. Gör ändringar i båda.
 
-- https://olssonjoakim-hub.github.io/Paraden/karta-mork.html
-
-Tidigare version (med levande blyertsfilter, långsammare i Safari), för jämförelse:
-
-- https://olssonjoakim-hub.github.io/Paraden/index-tidigare.html
-- https://olssonjoakim-hub.github.io/Paraden/handritad-tidigare.html
+Äldre versioner ligger i `arkiv/` och byggs inte. Deras gamla adresser (karta-mork.html,
+index-tidigare.html, handritad-tidigare.html) skickas vidare till huvudsidorna.

@@ -1,15 +1,13 @@
 <meta charset="utf-8">
-<title>Paraden mörk karta</title>
+<title>Paraden handritad</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="PARADEN är ett deltagarbaserat konstverk i mötet mellan kropp, skulptur och koreografi.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Montserrat:wght@400;500;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&family=Montserrat:wght@400;500;700;800;900&display=swap">
 <style>
 /* Layout: fullbreda band som växlar mellan natt (bild, galleri) och papper (text, karta); innehåll i en wrap på max 1240px. */
 :root {
-  --rule: rgba(21, 21, 21, .25);
-  --hover: rgba(21, 21, 21, .05);
   --paper: #e6e5e1;
   --paper-2: #d8d7d2;
   --ink: #151515;
@@ -19,7 +17,7 @@
   --felt: #262223;
   --chalk: #f2f1ed;
   --display: "Montserrat", "Gotham", "Helvetica Neue", Arial, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --mono: "Shadows Into Light Two", "Segoe Print", "Bradley Hand", cursive;
   --ease: cubic-bezier(.7, 0, .2, 1);
   --gutter-l: max(clamp(16px, 4vw, 48px), env(safe-area-inset-left, 0px));
   --gutter-r: max(clamp(16px, 4vw, 48px), env(safe-area-inset-right, 0px));
@@ -180,7 +178,7 @@ body {
   text-wrap: pretty;
 }
 .lede strong { font-weight: 800; letter-spacing: .04em; }
-.rule { width: 56px; height: 2px; background: var(--ink); }
+.rule { position: relative; width: 64px; height: 8px; }
 .manifest__text { display: grid; gap: 26px; min-width: 0; }
 .mani {
   margin: 0;
@@ -262,8 +260,9 @@ body {
 #map .furniture { stroke: var(--graphite); fill: none; stroke-width: 1.1; }
 #map .furniture-txt { font: 500 11px var(--mono); fill: var(--graphite); letter-spacing: .1em; }
 
-.stops { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--rule); min-width: 0; }
-.stops li { border-bottom: 1px solid var(--rule); }
+.stops { list-style: none; margin: 0; padding: 0; display: grid; min-width: 0; }
+.stops { position: relative; }
+.stops li { position: relative; }
 .anim .stops li { opacity: 0; transform: translateX(-12px); }
 .anim .stops.is-drawn li { opacity: 1; transform: none; transition: opacity .6s ease var(--d), transform .6s var(--ease) var(--d); }
 .stop {
@@ -278,7 +277,7 @@ body {
   position: relative;
   transition: padding .35s var(--ease), background .35s ease;
 }
-.stop:hover, .stop:focus-visible, .stop.hot { padding-left: 14px; background: var(--hover); }
+.stop:hover, .stop:focus-visible, .stop.hot { padding-left: 14px; background: rgba(21, 21, 21, .05); }
 .stop:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
 .stop-n { grid-row: span 2; font: 500 12px/1.9 var(--mono); color: var(--mute); letter-spacing: .1em; }
 .stop-town { font-weight: 800; font-size: 16px; letter-spacing: .08em; text-transform: uppercase; }
@@ -291,10 +290,11 @@ body {
   letter-spacing: .16em;
   text-transform: uppercase;
   padding: 5px 7px;
-  border: 1px solid currentColor;
+  position: relative;
   color: var(--graphite);
 }
-.stop-status.is-future { border-style: dashed; color: var(--mute); }
+.stop-status.is-future { color: var(--mute); }
+.stop-status.is-future .sk path { stroke-dasharray: 4 5; }
 .stop-arrow { grid-column: 3; grid-row: 2 / span 2; align-self: end; justify-self: end; font-size: 18px; transition: transform .35s var(--ease); }
 .stop:hover .stop-arrow, .stop.hot .stop-arrow { transform: translateX(4px); }
 
@@ -304,20 +304,7 @@ body {
 .foot-name { font-weight: 900; letter-spacing: .3em; font-size: 15px; }
 .foot p { margin: 0; font: 400 12px/1.6 var(--mono); color: rgba(242, 241, 237, .6); letter-spacing: .06em; }
 
-/* ---------- Mörk karta ---------- */
-/* Kartavsnittet i omvända färger: färgtokens skrivs om bara inom avsnittet. */
-.route {
-  --paper: #1b1a1a;
-  --ink: #f2f1ed;
-  --graphite: #c9c7c2;
-  --mute: #8a8883;
-  --rule: rgba(242, 241, 237, .22);
-  --hover: rgba(242, 241, 237, .06);
-  color: var(--ink);
-  background-image: url("bilder/korn-ljus.png");
-}
-
-/* ---------- Galleri (ljust i den här versionen) ---------- */
+/* ---------- Galleri ---------- */
 .gallery {
   position: fixed;
   inset: 0;
@@ -328,9 +315,8 @@ body {
   margin: 0;
   padding: 0;
   border: 0;
-  background: var(--paper) url("bilder/korn-papper.png");
-  background-attachment: local;
-  color: var(--ink);
+  background: var(--night);
+  color: var(--chalk);
   overflow-y: auto;
   overscroll-behavior: contain;
   clip-path: circle(0px at var(--cx, 50%) var(--cy, 50%));
@@ -351,7 +337,7 @@ body {
 .g-swap { transition: opacity .3s ease, transform .3s ease; }
 .g-swap.out { opacity: 0; transform: translateY(10px); }
 .gallery__head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px 24px; align-items: start; }
-.g-meta { margin: 0; font: 500 12px/1.4 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: rgba(21, 21, 21, .55); }
+.g-meta { margin: 0; font: 500 12px/1.4 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: rgba(242, 241, 237, .55); }
 .g-title {
   grid-column: 1;
   margin: 0;
@@ -363,7 +349,7 @@ body {
   text-transform: uppercase;
   overflow-wrap: anywhere;
 }
-.g-venue { grid-column: 1; margin: 6px 0 0; font: 400 14px/1.7 var(--mono); color: rgba(21, 21, 21, .8); }
+.g-venue { grid-column: 1; margin: 6px 0 0; font: 400 14px/1.7 var(--mono); color: rgba(242, 241, 237, .8); }
 .g-close {
   all: unset;
   grid-column: 2; grid-row: 1 / span 2;
@@ -375,14 +361,14 @@ body {
   letter-spacing: .2em;
   text-transform: uppercase;
   padding: 12px 14px;
-  border: 1px solid rgba(21, 21, 21, .4);
+  position: relative;
   transition: background .3s ease, color .3s ease;
 }
-.g-close:hover, .g-close:focus-visible { background: var(--night); color: var(--chalk); }
-.g-close:focus-visible { outline: 2px solid var(--night); outline-offset: 3px; }
-.g-sec { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px 32px; border-top: 1px solid rgba(21, 21, 21, .2); padding-top: 20px; }
-.g-sec h3 { margin: 0; font: 500 12px/1.6 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: rgba(21, 21, 21, .6); }
-.g-sec h3 small { display: block; letter-spacing: .1em; text-transform: none; color: rgba(21, 21, 21, .4); font-size: 11px; }
+.g-close:hover, .g-close:focus-visible { background: var(--chalk); color: var(--night); }
+.g-close:focus-visible { outline: 2px solid var(--chalk); outline-offset: 3px; }
+.g-sec { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px 32px; padding-top: 20px; position: relative; }
+.g-sec h3 { margin: 0; font: 500 12px/1.6 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: rgba(242, 241, 237, .6); }
+.g-sec h3 small { display: block; letter-spacing: .1em; text-transform: none; color: rgba(242, 241, 237, .4); font-size: 11px; }
 .rv { opacity: 0; transform: translateY(24px); }
 .is-open .rv { opacity: 1; transform: none; transition: opacity .7s ease calc(.35s + var(--k, 0) * .09s), transform .8s var(--ease) calc(.35s + var(--k, 0) * .09s); }
 .film { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: #000; overflow: hidden; }
@@ -391,7 +377,6 @@ body {
 .film-ph { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center; padding: 16px; }
 .film-ph svg { width: 64px; height: 64px; }
 .film-ph p { margin: 0; font: 400 13px/1.6 var(--mono); letter-spacing: .06em; color: rgba(242, 241, 237, .85); }
-.film-ph { color: var(--chalk); }
 .room { display: flex; gap: clamp(8px, 1.4vw, 18px); }
 .room figure { margin: 0; overflow: hidden; min-width: 0; }
 .room img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -399,19 +384,19 @@ body {
 .portraits figure { margin: 0; display: grid; gap: 8px; }
 .portraits .pf { overflow: hidden; aspect-ratio: 476 / 718; max-width: 100%; background: var(--felt); }
 .portraits img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.portraits figcaption { font: 400 11px/1.4 var(--mono); letter-spacing: .1em; color: rgba(21, 21, 21, .5); text-transform: uppercase; }
-.gallery__nav { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid rgba(21, 21, 21, .2); padding-top: 20px; }
+.portraits figcaption { font: 400 11px/1.4 var(--mono); letter-spacing: .1em; color: rgba(242, 241, 237, .5); text-transform: uppercase; }
+.gallery__nav { display: flex; justify-content: space-between; gap: 12px; padding-top: 20px; position: relative; }
 .gallery__nav button {
   all: unset;
   cursor: pointer;
   font: 500 12px/1.4 var(--mono);
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: rgba(21, 21, 21, .75);
+  color: rgba(242, 241, 237, .75);
   padding: 8px 0;
   min-width: 0;
 }
-.gallery__nav button:hover, .gallery__nav button:focus-visible { color: var(--night); text-decoration: underline; text-underline-offset: 6px; }
+.gallery__nav button:hover, .gallery__nav button:focus-visible { color: var(--chalk); text-decoration: underline; text-underline-offset: 6px; }
 .gallery__nav button:last-child { text-align: right; }
 
 /* Bilder i galleriet: svartvita tills man hovrar, klick öppnar dem större */
@@ -419,7 +404,7 @@ body {
 .room figure:hover img { transform: scale(1.04); }
 .portraits figure:hover img { transform: scale(1.05); }
 .room figure:hover img, .portraits figure:hover img, .room figure:focus-visible img, .portraits figure:focus-visible img { filter: none; }
-.room figure:focus-visible, .portraits figure:focus-visible { outline: 2px solid var(--night); outline-offset: 3px; }
+.room figure:focus-visible, .portraits figure:focus-visible { outline: 2px solid var(--chalk); outline-offset: 3px; }
 .zoom { position: fixed; inset: 0; z-index: 5; background: rgba(12, 12, 12, 0); transition: background .5s ease; outline: none; }
 .zoom.on { background: rgba(12, 12, 12, .4); }
 .zoom[hidden] { display: none; }
@@ -456,7 +441,26 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0s !important; transition-delay: 0s !important; animation: none !important; }
 }
+
+/* ---------- Handritat ---------- */
+body { font-synthesis: none; }
+.sk { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.sk path { fill: none; stroke: currentColor; stroke-width: 1.15; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
+.sk.soft path { opacity: .42; }
+.rule .sk path { stroke-width: 1.8; opacity: 1; }
+.room figure, .portraits .pf, .film { position: relative; }
+.room figure .sk path, .portraits .pf .sk path, .film .sk path { stroke: var(--chalk); stroke-width: 1.4; opacity: .9; }
+/* Text med ojämna, blyertsaktiga kanter */
+/* Kartavsnittet: handskrivet typsnitt (utom rubriken) */
+.route__head p:last-child { font-family: var(--mono); font-size: 18px; line-height: 1.5; }
+.stop-town { font-family: var(--mono); font-weight: 400; font-size: 21px; letter-spacing: .06em; line-height: 1.2; }
+#map .lbl-town { font: 400 28px var(--mono); letter-spacing: .08em; }
+@media (max-width: 860px) { #map .lbl-town { font-size: 34px; letter-spacing: .04em; } }
+
+.eyebrow, .g-meta, .g-sec h3, .stop-n { letter-spacing: .08em; }
+.hero__kicker, .hero__cue { letter-spacing: .16em; }
 </style>
+
 
 <header class="hero" id="top">
   <div class="hero__media">
@@ -552,6 +556,76 @@ body {
   const $ = (s, r = document) => r.querySelector(s);
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
   const lerp = (a, b, t) => a + (b - a) * t;
+
+  /* ================= Handritade linjer ================= */
+  const NS = 'http://www.w3.org/2000/svg';
+  const rngFrom = s => () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const f1 = n => n.toFixed(1);
+  // En handdragen linje: lätt böjd, med små överdrag i ändarna
+  const hLine = (r, x1, y1, x2, y2, j = 1.3) => {
+    const J = a => (r() * 2 - 1) * a;
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+    const over = Math.min(5, len * .02);
+    const sx = x1 - ux * over * r() + J(j * .5), sy = y1 - uy * over * r() + J(j * .5);
+    const ex = x2 + ux * over * r() + J(j * .5), ey = y2 + uy * over * r() + J(j * .5);
+    const bow = Math.min(j * 2, len * .015 + .6);
+    const c = t => [x1 + dx * t + nx * J(bow), y1 + dy * t + ny * J(bow)];
+    const [ax, ay] = c(.3 + J(.08)), [bx, by] = c(.7 + J(.08));
+    return `M${f1(sx)} ${f1(sy)} C${f1(ax)} ${f1(ay)} ${f1(bx)} ${f1(by)} ${f1(ex)} ${f1(ey)}`;
+  };
+  const hLine2 = (r, ...a) => hLine(r, ...a) + ' ' + hLine(r, ...a);
+  // En handdragen ellips: två varv som inte riktigt möts
+  const hEllipse = (r, cx, cy, rx, ry, passes = 2) => {
+    let d = '';
+    for (let p = 0; p < passes; p++) {
+      const a0 = r() * Math.PI * 2, turn = 1.04 + r() * .1, ph = r() * 6, amp = .035 + r() * .03, n = 44;
+      for (let i = 0; i <= n; i++) {
+        const a = a0 + turn * Math.PI * 2 * i / n, k = 1 + amp * Math.sin(a * 2 + ph);
+        d += (i ? 'L' : 'M') + f1(cx + Math.cos(a) * rx * k) + ' ' + f1(cy + Math.sin(a) * ry * k);
+      }
+    }
+    return d;
+  };
+  const SK = [
+    ['.rule', 'hline'], ['.stops', 'top soft'], ['.stops li', 'bottom soft'], ['.stop-status', 'box'],
+    ['.g-close', 'box'], ['.g-sec', 'top soft'], ['.gallery__nav', 'top soft'],
+    ['.room figure', 'frame'], ['.portraits .pf', 'frame'], ['.film', 'frame']
+  ];
+  let skSeed = 101;
+  const drawSk = el => {
+    const w = el.offsetWidth, h = el.offsetHeight;
+    if (!w || !h) return;
+    let svg = el.querySelector(':scope > svg.sk');
+    if (!svg) {
+      svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('aria-hidden', 'true');
+      el.appendChild(svg);
+    }
+    const [kind, soft] = el.__sk.split(' ');
+    svg.setAttribute('class', 'sk' + (soft ? ' soft' : ''));
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    const r = rngFrom(el.__seed);
+    let d = '';
+    if (kind === 'top') d = hLine2(r, 0, .5, w, .5);
+    else if (kind === 'bottom') d = hLine2(r, 0, h - .5, w, h - .5);
+    else if (kind === 'hline') d = hLine2(r, 0, h / 2, w, h / 2, 1.8);
+    else {
+      const i = kind === 'frame' ? 4 : 0;
+      d = [hLine(r, i, i, w - i, i), hLine(r, w - i, i, w - i, h - i), hLine(r, w - i, h - i, i, h - i), hLine(r, i, h - i, i, i)].join(' ');
+      if (kind === 'frame') d += ' ' + hLine(r, i + 2, i + 1, w - i - 3, i + 2);
+    }
+    svg.innerHTML = `<path d="${d}"/>`;
+  };
+  const skRO = 'ResizeObserver' in window ? new ResizeObserver(es => es.forEach(e => drawSk(e.target))) : null;
+  const sketch = (root = document) => {
+    SK.forEach(([sel, kind]) => root.querySelectorAll(sel).forEach(el => {
+      if (el.__sk) { drawSk(el); return; }
+      el.__sk = kind;
+      el.__seed = (skSeed = (skSeed * 48271) % 2147483647);
+      if (skRO) skRO.observe(el); else drawSk(el);
+    }));
+  };
 
   /* ================= Innehåll =================
      Lägg till eller ändra platser här. Bilderna är exempelbilder tills riktiga finns.
@@ -673,7 +747,7 @@ body {
   // Blyertsutseende utan levande filter (som Safari annars räknar om hela tiden):
   // darret räknas fram en gång och ligger i linjernas form, och grafitkornet är en liten
   // färdig bild (bilder/grafit.png) som fyller huvudlinjen.
-  const DEF = '<defs><clipPath id="kvart" clipPathUnits="userSpaceOnUse"><rect x="0" y="0" width="80" height="80"/></clipPath><pattern id="grafit" patternUnits="userSpaceOnUse" width="48" height="48"><image href="bilder/grafit-ljus.png" width="48" height="48"/></pattern></defs>';
+  const DEF = '<defs><clipPath id="kvart" clipPathUnits="userSpaceOnUse"><rect x="0" y="0" width="80" height="80"/></clipPath><pattern id="grafit" patternUnits="userSpaceOnUse" width="48" height="48"><image href="bilder/grafit.png" width="48" height="48"/></pattern></defs>';
   const pr = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(31337);
   const fx = n => n.toFixed(1);
   // Brus längs en linje: mjuka vågor plus fint skakande, högst ±amp enheter
@@ -716,16 +790,17 @@ body {
     return d;
   };
 
+  const mapR = rngFrom(4242);
   let svg = DEF;
   // Gradnät
   svg += '<g class="fade" style="--d:0s">';
   [60.5, 60, 59.5].forEach(lat => {
     const y = Y(lat);
-    svg += `<path class="grat" d="${wobble(linePts(10, y, 810, y + 3), .9)}"/><text class="grat-lbl" x="12" y="${y - 7}">${String(lat).replace('.', ',')}° N</text>`;
+    svg += `<path class="grat" d="${hLine(mapR, 10, y, 810, y + 3, 2)}"/><text class="grat-lbl" x="12" y="${y - 7}">${String(lat).replace('.', ',')}° N</text>`;
   });
   [17.5, 18, 18.5, 19].forEach(lon => {
     const x = X(lon);
-    svg += `<path class="grat" d="${wobble(linePts(x, 10, x - 3, 920), .9)}"/><text class="grat-lbl" x="${x + 6}" y="918">${String(lon).replace('.', ',')}° Ö</text>`;
+    svg += `<path class="grat" d="${hLine(mapR, x, 10, x - 3, 920, 2)}"/><text class="grat-lbl" x="${x + 6}" y="918">${String(lon).replace('.', ',')}° Ö</text>`;
   });
   svg += `<text class="sea" x="${X(19.12)}" y="${Y(60.25)}" transform="rotate(-62 ${X(19.12)} ${Y(60.25)})">ÅLANDS HAV</text>`;
   svg += `<text class="sea" x="${X(19.05)}" y="${Y(59.45)}" transform="rotate(-62 ${X(19.05)} ${Y(59.45)})">ÖSTERSJÖN</text>`;
@@ -771,8 +846,8 @@ body {
     svg += `<g class="pin" data-id="${p.id}" tabindex="0" role="button" aria-label="${p.ort}, ${p.lokal}. Öppna galleri" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" style="--d:${d.toFixed(2)}s">
       <circle class="pin-hit" r="34"/>
       <g class="pin-in">
-        <g clip-path="url(#kvart)"><path class="pin-ring2" d="${ring(15, 15, 1)}"/>
-        <path class="pin-ring" d="${ring(10, 10, 1)}"/></g>
+        <g clip-path="url(#kvart)"><path class="pin-ring2" d="${ring(15, 14, 1, 2, .05)}"/>
+        <path class="pin-ring" d="${ring(10, 9.5, 1, 2, .05)}"/></g>
         <circle class="pin-dot" r="4"/>
       </g>
       <g class="pin-lbl" text-anchor="${anchor}">
@@ -812,6 +887,7 @@ body {
       </button>
     </li>`).join('');
 
+  sketch();
   const drawMap = () => { map.classList.add('is-drawn'); stops.classList.add('is-drawn'); };
   if (reduce || !('IntersectionObserver' in window)) drawMap();
   else {
@@ -842,12 +918,12 @@ body {
   const swap = $('#g-swap');
   let current = null, lastFocus = null;
 
-  const playIcon = `<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M26 21 L45 32 L26 43 Z" fill="currentColor"/></svg>`;
+  const playIcon = `<svg viewBox="0 0 64 64" aria-hidden="true" style="overflow:visible"><path d="${hEllipse(rngFrom(77), 32, 32, 30, 29)}" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="${hLine(rngFrom(78), 26, 20, 26, 44)} ${hLine(rngFrom(79), 26, 20, 46, 32)} ${hLine(rngFrom(80), 46, 32, 26, 44)}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`;
 
   function fill(p) {
     const vs = VISITS.filter(v => v.place === p);
     $('#g-meta').textContent = 'Nedslag ' + vs.map(v => pad(v.n)).join(' & ') + ' · ' + vs.map(v => v.status).filter((s, i, a) => a.indexOf(s) === i).join(' / ');
-    // I den här versionen är lokalen huvudrubrik och orten står under, med datumen.
+    // Lokalen är huvudrubrik och orten står under, med datumen.
     $('#g-title').textContent = p.lokal;
     $('#g-venue').innerHTML = `${p.ort}<br>${p.besok.map(b => b.text).join('<br>')}`;
     $('#g-film').innerHTML = p.video
@@ -866,6 +942,7 @@ body {
     $('#g-next').textContent = next.ort + ' →';
     $('#g-next').dataset.id = next.id;
     current = p;
+    sketch(dlg);
   }
 
   function openGallery(id, e) {

@@ -11,7 +11,9 @@ import shutil
 
 ROT = pathlib.Path(__file__).parent
 UT = ROT / "docs"
-SIDOR = ["index.html", "handritad.html", "index-tidigare.html", "handritad-tidigare.html", "karta-mork.html"]
+SIDOR = ["index.html", "handritad.html"]
+# Gamla adresser som skickas vidare till huvudsidorna
+OMDIRIGERA = {"karta-mork.html": "./", "index-tidigare.html": "./", "handritad-tidigare.html": "handritad.html"}
 
 GRUND = """<style>
 :root { box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
@@ -41,6 +43,10 @@ def main() -> None:
     for namn in SIDOR:
         (UT / namn).write_text(bygg_sida((ROT / namn).read_text(encoding="utf-8")), encoding="utf-8")
     shutil.copytree(ROT / "bilder", UT / "bilder")
+    for gammal, ny in OMDIRIGERA.items():
+        (UT / gammal).write_text(
+            f'<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url={ny}">'
+            f'<link rel="canonical" href="{ny}"><title>Paraden</title><a href="{ny}">Paraden</a>\n', encoding="utf-8")
     (UT / ".nojekyll").write_text("")
     print("Klart:", ", ".join(str(p.relative_to(ROT)) for p in sorted(UT.rglob("*")) if p.is_file()))
 
