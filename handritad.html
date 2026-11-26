@@ -602,10 +602,24 @@ body {
   const SK = [
     ['.rule', 'hline'], ['.stops', 'top soft'], ['.stops li', 'bottom soft'], ['.stop-status', 'box'],
     ['.g-close', 'box'], ['.g-sec', 'top soft'], ['.gallery__nav', 'top soft'],
-    ['.room figure', 'frame'], ['.portraits .pf', 'frame'], ['.film', 'frame']
+    ['.room figure', 'ragged'], ['.portraits .pf', 'ragged'], ['.film', 'ragged']
   ];
   let skSeed = 101;
+  // Ojämn, handklippt kant: bilden skärs längs en lätt taggig kontur (clip-path, billigt även i Safari)
+  const raggedEdge = el => {
+    const w = el.offsetWidth, h = el.offsetHeight;
+    if (!w || !h) return;
+    const r = rngFrom(el.__seed), step = 9, pts = [];
+    const depth = () => .4 + r() * 2.8 + (r() < .12 ? r() * 2.5 : 0);
+    const edge = (n, f) => { for (let i = 0; i < n; i++) pts.push(f(i / n, depth())); };
+    edge(Math.ceil(w / step), (t, k) => [t * w, k]);
+    edge(Math.ceil(h / step), (t, k) => [w - k, t * h]);
+    edge(Math.ceil(w / step), (t, k) => [w - t * w, h - k]);
+    edge(Math.ceil(h / step), (t, k) => [k, h - t * h]);
+    el.style.clipPath = `polygon(${pts.map(([x, y]) => `${x.toFixed(1)}px ${y.toFixed(1)}px`).join(',')})`;
+  };
   const drawSk = el => {
+    if (el.__sk === 'ragged') { raggedEdge(el); return; }
     const w = el.offsetWidth, h = el.offsetHeight;
     if (!w || !h) return;
     let svg = el.querySelector(':scope > svg.sk');
